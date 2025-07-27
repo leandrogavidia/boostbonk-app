@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">BoostBonk</string>
+    <string name="boostboonk">BoostBonk</string>
+    <string name="for_builders">For builders who don\'t settle for ordinary</string>
+    <string name="join_the_builder_community">Join the Builder Community</string>
+    <string name="build_reputation">Build reputation, earn BONK, and connect with fellow builders</string>
+    <string name="terms_of_service_and_privacy_policy">By signing in, you agree to our Terms of Service and Privacy Policy</string>
+    <string name="make_it_fun">🐕 Make it Fun • Make it For Others • Make it For The Dog</string>
 </resources>

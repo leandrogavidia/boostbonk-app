@@ -14,19 +14,38 @@ val Herborn = FontFamily(
 
 val Poppins = FontFamily(
     Font(R.font.poppins_regular),
+    Font(R.font.poppins_semibold, FontWeight.SemiBold),
     Font(R.font.poppins_bold, FontWeight.Bold)
 )
 
 
 // Set of Material typography styles to start with
 val Typography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = Poppins,
+        fontSize = 36.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 1.sp
+    ),
+    displaySmall = TextStyle(
+        fontFamily = Poppins,
+        fontSize = 20.sp,
+        fontWeight = FontWeight.SemiBold,
+    ),
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = Poppins,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
-    )
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = Poppins,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
     /* Other default text styles to override
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
