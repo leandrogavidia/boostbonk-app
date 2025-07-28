@@ -6,4 +6,12 @@
     <string name="build_reputation">Build reputation, earn BONK, and connect with fellow builders</string>
     <string name="terms_of_service_and_privacy_policy">By signing in, you agree to our Terms of Service and Privacy Policy</string>
     <string name="make_it_fun">🐕 Make it Fun • Make it For Others • Make it For The Dog</string>
+    <string name="bonk_coin">Bonk coin</string>
+    <string name="total_balance">Total Balance</string>
+    <string name="bonk">BONK</string>
+    <string name="receive">Receive</string>
+    <string name="withdraw">Withdraw</string>
+    <string name="community_feed">Community Feed</string>
+    <string name="feed_description">See the latest boosts from builders</string>
+    <string name="sign_in_with_x">Sign in with X</string>
 </resources>

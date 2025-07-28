@@ -27,10 +27,27 @@ val Typography = Typography(
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 1.sp
     ),
+    displayMedium = TextStyle(
+        fontFamily = Herborn,
+        fontSize = 24.sp,
+    ),
     displaySmall = TextStyle(
         fontFamily = Poppins,
         fontSize = 20.sp,
         fontWeight = FontWeight.SemiBold,
+    ),
+    labelLarge = TextStyle(
+        fontFamily = Poppins,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold
+    ),
+    labelMedium = TextStyle(
+        fontFamily = Herborn,
+        fontSize = 16.sp,
+    ),
+    labelSmall = TextStyle(
+        fontFamily = Herborn,
+        fontSize = 12.sp,
     ),
     bodyLarge = TextStyle(
         fontFamily = Poppins,
@@ -46,20 +63,4 @@ val Typography = Typography(
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-    */
 )
