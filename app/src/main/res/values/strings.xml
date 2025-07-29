@@ -14,4 +14,9 @@
     <string name="community_feed">Community Feed</string>
     <string name="feed_description">See the latest boosts from builders</string>
     <string name="sign_in_with_x">Sign in with X</string>
+    <string name="receive_bonk">Receive BONK</string>
+    <string name="qr_code">QR Code</string>
+    <string name="your_wallet_address">Your Wallet Address</string>
+    <string name="copy_address">Copy Address</string>
+    <string name="receive_warning">Share this address or QR code with others to receive BONK tokens</string>
 </resources>
