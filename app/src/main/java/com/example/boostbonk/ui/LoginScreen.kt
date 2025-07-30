@@ -1,6 +1,7 @@
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,26 +12,41 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.boostbonk.R
 import com.example.boostbonk.ui.theme.BonkBlack
 import com.example.boostbonk.ui.theme.BonkGray
-import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
-import com.example.boostbonk.ui.theme.BonkYellow
-import com.example.boostbonk.ui.theme.BoostBonkTheme
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Twitter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import java.security.MessageDigest
+import java.util.UUID
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    supabase: SupabaseClient
+) {
+    val context = LocalContext.current
+    val authManager = remember { AuthManager(context, supabase) }
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -78,7 +94,22 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(32.dp))
 
             SignInWithXButton(
-                onClick = { /* handle sign in */ },
+                onClick = {
+                    scope.launch {
+                        authManager.signUpWithX().collect { response ->
+                            when (response) {
+                                is AuthResponse.Success -> {
+                                    navController.navigate("feed") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
+                                is AuthResponse.Error -> {
+                                    Log.e("Auth", "Error: ${response.message}")
+                                }
+                            }
+                        }
+                    }
+                },
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -99,9 +130,49 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true)
+sealed interface AuthResponse {
+    data object Success : AuthResponse
+    data class Error(val message: String?) : AuthResponse
+}
+
+class AuthManager(
+    private val context: Context,
+    supabaseClient: SupabaseClient
+) {
+    private val supabase = supabaseClient
+
+    fun signUpWithX(): Flow<AuthResponse> = flow {
+        try {
+            supabase.auth.signUpWith(
+                provider = Twitter,
+                redirectUrl = "boostbonk://auth/callback"
+            )
+
+            emit(AuthResponse.Success)
+        } catch (e: Exception) {
+            emit(AuthResponse.Error(e.localizedMessage))
+        }
+    }
+
+    fun createNonce(): String {
+        val rawNonce = UUID.randomUUID().toString()
+        val bytes = rawNonce.toByteArray()
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+
+        return digest.fold("") { str, it ->
+            str + "%02x".format(it)
+        }
+    }
+}
+
+/* @Preview(
+    showBackground = true,
+    apiLevel = 34 // o 33 o 35
+)
 @Composable
 fun LoginScreenPreview() {
+    val navController = rememberNavController()
     BoostBonkTheme {
         Box(
             modifier = Modifier
@@ -114,7 +185,7 @@ fun LoginScreenPreview() {
                     )
                 )
         ) {
-            LoginScreen()
+            LoginScreen(navController = navController)
         }
     }
-}
+} */
