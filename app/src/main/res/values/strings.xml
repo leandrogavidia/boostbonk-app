@@ -21,4 +21,10 @@
     <string name="receive_warning">Share this address or QR code with others to receive BONK tokens</string>
     <string name="send_bonk">Send Bonk</string>
     <string name="available_balance">Available Balance</string>
+    <string name="amount_bonk">Amount (BONK)</string>
+    <string name="enter_amount_to_send">Enter amount to send</string>
+    <string name="receiver_wallet_address">Receiver Wallet Address</string>
+    <string name="enter_receiver_wallet_address">Enter receiver\'s wallet address</string>
+    <string name="send">Send</string>
+    <string name="send_bonk_warning">Double-check the receiver address before sending. Transactions cannot be reversed.</string>
 </resources>
