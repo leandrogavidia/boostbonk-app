@@ -67,7 +67,7 @@ fun PostCard(
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
-                    text = post.time,
+                    text = post.created_at ?: "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = BonkGray
                 )
@@ -112,7 +112,7 @@ fun PostCard(
             ) {
                 ColumnValue(
                     name = "Boosts",
-                    value = post.totalBoosts
+                    value = post.boosts
                 )
             }
             Column(
@@ -122,7 +122,7 @@ fun PostCard(
             ) {
                 ColumnValue(
                     name = "BONK EARNED",
-                    value = post.totalBonks
+                    value = post.bonk_earned
                 )
             }
             BoostButton()

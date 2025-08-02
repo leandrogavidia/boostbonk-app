@@ -1,4 +1,5 @@
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
@@ -18,14 +22,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.example.boostbonk.R
 import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkOrange
@@ -35,8 +42,9 @@ import com.example.boostbonk.ui.theme.BoostBonkTheme
 @Composable
 fun ProfileCard(
     modifier: Modifier = Modifier,
+    displayName: String,
     username: String,
-    description: String
+    avatarUrl: String,
 ) {
     val gradient = Brush.horizontalGradient(listOf(Color(0xFFFF9800), Color(0xFFFF5722)))
 
@@ -57,25 +65,31 @@ fun ProfileCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Image(
+                    painter = rememberAsyncImagePainter(avatarUrl),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.width(16.dp))
                 Column {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.displaySmall
+                    )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = username,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = BonkOrange
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = description,
-                fontSize = 14.sp,
-                textAlign = TextAlign.Start
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             OutlinedButton(
                 onClick = { /* TODO: share action */ },
@@ -170,8 +184,9 @@ fun RankingCard(rank: String, label: String, modifier: Modifier = Modifier) {
 fun ProfileCardPreview() {
     BoostBonkTheme {
         ProfileCard(
-            username = "@cryptodev_mike",
-            description = "Building the future of DeFi on Solana. Passionate about creating tools that empower builders and foster community growth. Always learning, always building!"
+            displayName = "BoostBonk",
+            username = "@boost_bonk",
+            avatarUrl = "https://pbs.twimg.com/profile_images/1950733465457922048/Rl1UGOnw_400x400.jpg",
         )
     }
 }

@@ -11,6 +11,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
@@ -23,13 +24,16 @@ import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkYellow
 import com.example.boostbonk.ui.theme.BoostBonkTheme
 import io.github.jan.supabase.auth.auth
+import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
 
     private val supabase = SupabaseClientProvider.client
+    private val viewModel: BoostBonkViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
 
         setContent {
@@ -76,13 +80,13 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable(Screen.Feed.route) {
-                                FeedScreen()
+                                FeedScreen(viewModel = viewModel)
                             }
                             composable(Screen.Wallet.route) {
                                 WalletScreen()
                             }
                             composable(Screen.Profile.route) {
-                                ProfileScreen()
+                                ProfileScreen(viewModel = viewModel)
                             }
                             composable(Screen.Ranking.route) {
                                 RankingScreen()

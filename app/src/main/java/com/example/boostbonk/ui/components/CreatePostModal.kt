@@ -1,7 +1,6 @@
 package com.example.boostbonk.ui.components
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -41,7 +40,6 @@ import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,13 +125,7 @@ fun CreatePostModal(
                 Button(
                     onClick = {
                         coroutineScope.launch {
-                            Log.d("CreatePost", "Description: $description")
-                            Log.d("CreatePost", "Image URI: ${imageUri?.toString() ?: "No image selected"}")
-
-                            onImageChange(null)
-                            onDescriptionChange("")
                             onSubmitSuccess()
-                            delay(2000)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(

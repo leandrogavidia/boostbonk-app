@@ -26,7 +26,7 @@ class DeepLinkHandlerActivity : ComponentActivity() {
                 val code = uri.getQueryParameter("code")
 
                 if (code != null) {
-                    val session = supabase.auth.exchangeCodeForSession(code)
+                    val session = supabase.auth.exchangeCodeForSession(code, saveSession = true)
                     Log.d("SessionCheck", "✅ Session: ${session.user?.email}")
 
                     withContext(Dispatchers.Main) {

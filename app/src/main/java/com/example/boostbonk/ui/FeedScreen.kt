@@ -28,23 +28,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.boostbonk.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.mock.mockPosts
 import com.example.boostbonk.ui.components.CreatePostModal
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.ui.theme.BonkYellow
-import com.example.boostbonk.ui.theme.BoostBonkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(modifier: Modifier = Modifier) {
+fun FeedScreen(
+    modifier: Modifier = Modifier,
+    viewModel: BoostBonkViewModel
+) {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
+
     val (showCreateSheet, setShowCreateSheet) = remember { mutableStateOf(false) }
     val (description, setDescription) = remember { mutableStateOf("") }
     val (imageUri, setImageUri) = remember { mutableStateOf<Uri?>(null) }
@@ -122,33 +127,25 @@ fun FeedScreen(modifier: Modifier = Modifier) {
                             setImageUri(null)
                         },
                         onSubmitSuccess = {
-                            setIsLoading(false)
-                            setShowCreateSheet(false)
+                            setIsLoading(true)
+                            viewModel.submitPost(
+                                description = description,
+                                imageUri = imageUri,
+                                username = viewModel.username.value ?: "",
+                                userId = viewModel.userId.value ?: "",
+                                context = context
+                            ) { success ->
+                                setIsLoading(false)
+                                if (success) {
+                                    setShowCreateSheet(false)
+                                    setDescription("")
+                                    setImageUri(null)
+                                }
+                            }
                         },
                     )
                 }
             }
-        }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun FeedScreenPreview() {
-    BoostBonkTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(BonkOrange, BonkYellow),
-                        start = Offset(0f, 0f),
-                        end = Offset.Infinite
-                    )
-                )
-        ) {
-            FeedScreen()
         }
     }
 }

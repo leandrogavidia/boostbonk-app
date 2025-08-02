@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.boostbonk.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.mock.mockPosts
 import com.example.boostbonk.ui.components.CreatePostModal
@@ -39,8 +41,14 @@ import com.example.boostbonk.ui.theme.BoostBonkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(
+    modifier: Modifier = Modifier,
+    viewModel: BoostBonkViewModel
+) {
     val coroutineScope = rememberCoroutineScope()
+    val username = viewModel.username.collectAsState()
+    val displayName = viewModel.fullName.collectAsState()
+    val avatarUrl = viewModel.avatarUrl.collectAsState()
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val (showCreateSheet, setShowCreateSheet) = remember { mutableStateOf(false) }
@@ -73,8 +81,9 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
             ) {
                 item {
                     ProfileCard(
-                        username = "@cryptodev_mike",
-                        description = "Building the future of DeFi on Solana. Passionate about creating tools that empower builders and foster community growth. Always learning, always building!"
+                        displayName = displayName.value ?: "",
+                        avatarUrl = avatarUrl.value ?: "",
+                        username = "@${username.value}",
                     )
                 }
 
@@ -114,27 +123,6 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                     },
                 )
             }
-        }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreview() {
-    BoostBonkTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(BonkOrange, BonkYellow),
-                        start = Offset(0f, 0f),
-                        end = Offset.Infinite
-                    )
-                )
-        ) {
-            ProfileScreen()
         }
     }
 }
