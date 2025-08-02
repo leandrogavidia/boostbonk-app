@@ -59,7 +59,8 @@ fun ReceiveScreenPreview() {
                     )
                 )
         ) {
-            ReceiveScreen(walletAddress = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU")
+            ReceiveScreen(
+                walletAddress = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU")
         }
     }
 }

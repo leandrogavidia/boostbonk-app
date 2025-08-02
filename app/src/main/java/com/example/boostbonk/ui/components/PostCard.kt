@@ -65,7 +65,6 @@ fun PostCard(
                         color = BonkBlack
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.Share, null, tint = BonkGray)
                 }
                 Text(
                     text = post.time,

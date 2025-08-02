@@ -27,4 +27,20 @@
     <string name="enter_receiver_wallet_address">Enter receiver\'s wallet address</string>
     <string name="send">Send</string>
     <string name="send_bonk_warning">Double-check the receiver address before sending. Transactions cannot be reversed.</string>
+    <string name="boostbonk_logo">BoostBonk Logo</string>
+    <string name="feed">Feed</string>
+    <string name="ranking">Ranking</string>
+    <string name="wallet">Wallet</string>
+    <string name="profile">Profile</string>
+    <string name="share_profile">🔗 Share Profile</string>
+    <string name="total_bonk">Total BONK</string>
+    <string name="total_boosts">Total Boosts</string>
+    <string name="week_ranking">Week Ranking</string>
+    <string name="all_time">All Time</string>
+    <string name="create_post">Create Post</string>
+    <string name="description">Description</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="select_image">Select Image</string>
+    <string name="add_image">Add Image</string>
 </resources>

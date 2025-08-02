@@ -1,22 +1,24 @@
 package com.example.boostbonk
 
+import BottomNavBar
 import FeedScreen
 import LoginScreen
+import ProfileScreen
+import Screen
+import WalletScreen
+import RankingScreen
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkYellow
 import com.example.boostbonk.ui.theme.BoostBonkTheme
@@ -32,18 +34,28 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
+            val sessionState = remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
                 val session = supabase.auth.currentSessionOrNull()
                 if (session != null) {
-                    navController.navigate("feed") {
-                        popUpTo("login") { inclusive = true }
+                    sessionState.value = true
+                    navController.navigate(Screen.Feed.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
             }
 
             BoostBonkTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+                        if (sessionState.value && currentRoute != Screen.Login.route) {
+                            BottomNavBar(navController)
+                        }
+                    }
+                ) { innerPadding ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -56,12 +68,24 @@ class MainActivity : ComponentActivity() {
                             )
                             .padding(innerPadding)
                     ) {
-                        NavHost(navController, startDestination = "login") {
-                            composable("login") {
-                                LoginScreen(navController = navController, supabase = supabase)
+                        NavHost(navController, startDestination = Screen.Login.route) {
+                            composable(Screen.Login.route) {
+                                LoginScreen(
+                                    navController = navController,
+                                    supabase = supabase,
+                                )
                             }
-                            composable("feed") {
+                            composable(Screen.Feed.route) {
                                 FeedScreen()
+                            }
+                            composable(Screen.Wallet.route) {
+                                WalletScreen()
+                            }
+                            composable(Screen.Profile.route) {
+                                ProfileScreen()
+                            }
+                            composable(Screen.Ranking.route) {
+                                RankingScreen()
                             }
                         }
                     }
