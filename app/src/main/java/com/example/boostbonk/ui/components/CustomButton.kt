@@ -1,3 +1,4 @@
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -29,6 +30,7 @@ fun CustomButton(
     text: String,
     backgroundColor: Color,
     contentColor: Color = BonkWhite,
+    isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
     Button(
@@ -38,17 +40,27 @@ fun CustomButton(
             contentColor = contentColor
         ),
         shape = RoundedCornerShape(12.dp),
-        modifier = modifier
-            .height(48.dp)
+        modifier = modifier.height(48.dp),
+        enabled = !isLoading,
     ) {
-        Icon(imageVector = icon, contentDescription = null)
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            letterSpacing = 4.sp,
-            lineHeight = 20.sp
-        )
+        if (isLoading) {
+            androidx.compose.material3.CircularProgressIndicator(
+                color = BonkWhite,
+                strokeWidth = 2.dp,
+                modifier = Modifier
+                    .width(20.dp)
+                    .height(20.dp)
+            )
+        } else {
+            Icon(imageVector = icon, contentDescription = null)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                letterSpacing = 4.sp,
+                lineHeight = 20.sp
+            )
+        }
     }
 }
 

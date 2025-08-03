@@ -19,7 +19,10 @@ import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkOrange
 
 @Composable
-fun BottomNavBar(navController: NavHostController) {
+fun BottomNavBar(
+    navController: NavHostController,
+    currentUsername: String
+) {
     val items = listOf(Screen.Feed, Screen.Ranking, Screen.Wallet, Screen.Profile)
 
     NavigationBar {
@@ -27,34 +30,40 @@ fun BottomNavBar(navController: NavHostController) {
         val currentRoute = navBackStackEntry?.destination?.route
 
         items.forEach { screen ->
+            val isSelected = when (screen) {
+                is Screen.Profile -> currentRoute?.startsWith("profile") == true
+                else -> currentRoute == screen.route
+            }
+
+            val route = when (screen) {
+                is Screen.Profile -> "profile/$currentUsername"
+                else -> screen.route
+            }
+
+            val icon = when (screen) {
+                is Screen.Feed -> Icons.Filled.Home
+                is Screen.Ranking -> Icons.Filled.EmojiEvents
+                is Screen.Wallet -> Icons.Filled.Wallet
+                is Screen.Profile -> Icons.Filled.Person
+                else -> Icons.Filled.Home
+            }
+
+            val label = screen.label
+
             NavigationBarItem(
-                selected = currentRoute == screen.route,
+                selected = isSelected,
                 onClick = {
-                    if (currentRoute != screen.route) {
-                        navController.navigate(screen.route) {
+                    if (currentRoute != route) {
+                        navController.navigate(route) {
                             popUpTo(Screen.Feed.route) { inclusive = false }
                             launchSingleTop = true
                         }
                     }
                 },
-                label = { Text(screen.label) },
                 icon = {
-                    when (screen) {
-                        is Screen.Feed -> Icon( Icons.Filled.Home, contentDescription = stringResource(
-                            R.string.feed
-                        ))
-                        is Screen.Ranking -> Icon(Icons.Filled.EmojiEvents, contentDescription = stringResource(
-                            R.string.ranking
-                        ))
-                        is Screen.Wallet -> Icon(Icons.Filled.Wallet, contentDescription = stringResource(
-                            R.string.wallet
-                        ))
-                        is Screen.Profile -> Icon(Icons.Filled.Person, contentDescription = stringResource(
-                            R.string.profile
-                        ))
-                        else -> {}
-                    }
+                    Icon(icon, contentDescription = label)
                 },
+                label = { Text(label) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = BonkOrange,
                     unselectedIconColor = BonkGray,

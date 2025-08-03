@@ -1,5 +1,4 @@
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,31 +24,35 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.boostbonk.BoostBonkViewModel
 import com.example.boostbonk.R
-import com.example.boostbonk.data.mock.mockPosts
+import com.example.boostbonk.data.model.UserInfo
 import com.example.boostbonk.ui.components.CreatePostModal
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
-import com.example.boostbonk.ui.theme.BonkYellow
-import com.example.boostbonk.ui.theme.BoostBonkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    viewModel: BoostBonkViewModel
+    viewModel: BoostBonkViewModel,
+    userInfo: UserInfo? = null,
+    navController: NavController
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val username = viewModel.username.collectAsState()
-    val displayName = viewModel.fullName.collectAsState()
-    val avatarUrl = viewModel.avatarUrl.collectAsState()
+    val context = LocalContext.current
+
+    val fromUserId = viewModel.userId.collectAsState().value ?: ""
+    val toUserId = userInfo?.id ?: ""
+
+    val username = userInfo?.username ?: viewModel.username.collectAsState().value ?: ""
+    val displayName = userInfo?.fullName ?: viewModel.fullName.collectAsState().value ?: ""
+    val avatarUrl = userInfo?.avatarUrl ?: viewModel.avatarUrl.collectAsState().value ?: ""
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val (showCreateSheet, setShowCreateSheet) = remember { mutableStateOf(false) }
@@ -56,14 +60,23 @@ fun ProfileScreen(
     val (imageUri, setImageUri) = remember { mutableStateOf<Uri?>(null) }
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
 
+    val posts = viewModel.userPosts.collectAsState().value
+    val isOwnProfile = userInfo?.username == viewModel.username.collectAsState().value
+
+    LaunchedEffect(username) {
+        viewModel.loadPostsByUsername(username)
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { setShowCreateSheet(true) },
-                containerColor = BonkOrange
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_post))
+            if (isOwnProfile) {
+                FloatingActionButton(
+                    onClick = { setShowCreateSheet(true) },
+                    containerColor = BonkOrange
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_post))
+                }
             }
         }
     ) { innerPadding ->
@@ -81,9 +94,13 @@ fun ProfileScreen(
             ) {
                 item {
                     ProfileCard(
-                        displayName = displayName.value ?: "",
-                        avatarUrl = avatarUrl.value ?: "",
-                        username = "@${username.value}",
+                        displayName = displayName,
+                        avatarUrl = avatarUrl,
+                        username = "@${username}",
+                        isOwnProfile = isOwnProfile,
+                        viewModel = viewModel,
+                        fromUserId = fromUserId,
+                        toUserId = toUserId
                     )
                 }
 
@@ -95,8 +112,12 @@ fun ProfileScreen(
                         colors = CardDefaults.cardColors(BonkWhite)
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            mockPosts.forEach { post ->
-                                PostCard(post = post)
+                            posts.forEach { post ->
+                                PostCard(
+                                    post = post,
+                                    navController = navController,
+                                    viewModel = viewModel
+                                )
                             }
                         }
                     }
@@ -118,8 +139,21 @@ fun ProfileScreen(
                         setImageUri(null)
                     },
                     onSubmitSuccess = {
-                        setIsLoading(false)
-                        setShowCreateSheet(false)
+                        setIsLoading(true)
+                        viewModel.submitPost(
+                            description = description,
+                            imageUri = imageUri,
+                            userId = viewModel.userId.value ?: "",
+                            context = context
+                        ) { success ->
+                            setIsLoading(false)
+                            if (success) {
+                                setShowCreateSheet(false)
+                                setDescription("")
+                                setImageUri(null)
+                                viewModel.loadPostsByUsername(username)
+                            }
+                        }
                     },
                 )
             }

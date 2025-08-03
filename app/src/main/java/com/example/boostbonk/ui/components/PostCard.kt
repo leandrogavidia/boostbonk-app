@@ -1,6 +1,7 @@
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,32 +12,47 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.boostbonk.data.mock.mockPosts
-import com.example.boostbonk.data.model.Post
+import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.boostbonk.BoostBonkViewModel
+import com.example.boostbonk.R
+import com.example.boostbonk.data.model.PostWithUser
 import com.example.boostbonk.ui.components.ColumnValue
-import com.example.boostbonk.ui.theme.BonkBlack
 import com.example.boostbonk.ui.theme.BonkGray
+import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
-import com.example.boostbonk.ui.theme.BoostBonkTheme
+import com.example.boostbonk.utils.formatBonkEarned
+import com.example.boostbonk.utils.formatRelativeTime
 
 @Composable
 fun PostCard(
     modifier: Modifier = Modifier,
-    post: Post,
+    post: PostWithUser,
+    navController: NavController,
+    viewModel: BoostBonkViewModel,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    val (showBoostModal, setShowBoostModal) = remember { mutableStateOf(false) }
+    val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
+
+    val username = viewModel.username.collectAsState().value ?: ""
+    val isOwnProfile = post.username == username
+    val userId = viewModel.userId.collectAsState().value ?: ""
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -46,28 +62,37 @@ fun PostCard(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier
+                .padding(12.dp)
+                .clickable {
+                    navController.navigate("profile/${post.username}")
+                }
         ) {
-            Box(
+            Image(
+                painter = rememberAsyncImagePainter(post.avatarUrl),
+                contentDescription = null,
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(BonkGray)
+                    .size(60.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.width(8.dp))
 
             Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = post.username,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = BonkBlack
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                }
                 Text(
-                    text = post.created_at ?: "",
+                    text = "${post.fullName}",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = BonkGray
+                )
+                Text(
+                    text = "@${post.username}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = BonkOrange
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = formatRelativeTime(post.createdAt),
                     style = MaterialTheme.typography.bodyMedium,
                     color = BonkGray
                 )
@@ -83,16 +108,19 @@ fun PostCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
-                .padding(horizontal = 12.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFECECEC)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.AccountBox, contentDescription = null, tint = Color.LightGray)
+        post.image?.takeIf { it.isNotBlank() }?.let { imageUrl ->
+            Image(
+                painter = rememberAsyncImagePainter(imageUrl),
+                contentDescription = "Post image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .padding(horizontal = 12.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -106,41 +134,60 @@ fun PostCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
-                modifier = Modifier,
+                modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 ColumnValue(
-                    name = "Boosts",
-                    value = post.boosts
+                    name = stringResource(R.string.boosts),
+                    value = "%,d".format(post.boosts)
                 )
             }
+            Spacer(modifier = Modifier.width(4.dp))
             Column(
-                modifier = Modifier,
+                modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 ColumnValue(
-                    name = "BONK EARNED",
-                    value = post.bonk_earned
+                    name = stringResource(R.string.bonk_earned),
+                    value = formatBonkEarned(post.bonkEarned ?: 0.0)
                 )
             }
-            BoostButton()
+
+            if (!isOwnProfile) {
+                Spacer(modifier = Modifier.width(20.dp))
+                BoostButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = { setShowBoostModal(true) }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-    }
-}
 
-@Preview(showBackground = false)
-@Composable
-fun PostCardPreview() {
-    BoostBonkTheme {
-        Box(modifier = Modifier) {
-            PostCard(
-                post = mockPosts.get(0)
+        if (showBoostModal) {
+            BoostBonkModal(
+                onDismiss = { setShowBoostModal(false) },
+                coroutineScope = coroutineScope,
+                isLoading = isLoading,
+                onSubmit = { amount ->
+                    setIsLoading(true)
+                    viewModel.submitBoost(
+                        bonks = amount,
+                        postId = post.id,
+                        fromUserId = userId,
+                        toUserId = post.userId
+                    ) { success ->
+                        setIsLoading(false)
+                        setShowBoostModal(false)
+                        if (success) {
+                            viewModel.getAllPosts()
+                        }
+                    }
+                }
             )
         }
+
     }
 }
-

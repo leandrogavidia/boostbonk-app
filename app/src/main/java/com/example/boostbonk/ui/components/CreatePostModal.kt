@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.boostbonk.R
@@ -77,7 +79,10 @@ fun CreatePostModal(
                 value = description,
                 onValueChange = { onDescriptionChange(it) },
                 label = { Text(stringResource(R.string.description)) },
-                modifier = Modifier.fillMaxWidth().height(160.dp)
+                modifier = Modifier.fillMaxWidth().height(160.dp),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                )
             )
 
             Spacer(modifier = Modifier.height(8.dp))

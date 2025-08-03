@@ -19,10 +19,12 @@ import com.example.boostbonk.ui.theme.BoostBonkTheme
 
 @Composable
 fun BoostButton(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Button(
-        onClick = { /* Boost click */ },
+        onClick = onClick,
+        modifier = Modifier,
         colors = ButtonDefaults.buttonColors(containerColor = BonkOrange),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -45,7 +47,9 @@ fun BoostButton(
 fun ColumnValuePreview() {
     BoostBonkTheme {
         Box(modifier = Modifier) {
-            BoostButton()
+            BoostButton(
+                onClick = {}
+            )
         }
     }
 }

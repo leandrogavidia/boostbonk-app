@@ -20,7 +20,7 @@ import com.example.boostbonk.ui.theme.BoostBonkTheme
 @Composable
 fun ColumnValue(
     modifier: Modifier = Modifier,
-    value: Number,
+    value: String,
     name: String
 ) {
     Column(
@@ -29,7 +29,7 @@ fun ColumnValue(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = value.toString(),
+            text = value,
             style = MaterialTheme.typography.displaySmall,
             color = BonkOrange,
             textAlign = TextAlign.Center
@@ -50,7 +50,7 @@ fun ColumnValuePreview() {
     BoostBonkTheme {
         Box(modifier = Modifier) {
             ColumnValue(
-                value = 0,
+                value = "0",
                 name = "Boosts"
             )
         }

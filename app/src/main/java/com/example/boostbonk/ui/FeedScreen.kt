@@ -2,11 +2,12 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,9 +35,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.boostbonk.BoostBonkViewModel
 import com.example.boostbonk.R
-import com.example.boostbonk.data.mock.mockPosts
 import com.example.boostbonk.ui.components.CreatePostModal
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
@@ -44,7 +47,8 @@ import com.example.boostbonk.ui.theme.BonkYellow
 @Composable
 fun FeedScreen(
     modifier: Modifier = Modifier,
-    viewModel: BoostBonkViewModel
+    viewModel: BoostBonkViewModel,
+    navController: NavController
 ) {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -54,6 +58,11 @@ fun FeedScreen(
     val (description, setDescription) = remember { mutableStateOf("") }
     val (imageUri, setImageUri) = remember { mutableStateOf<Uri?>(null) }
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
+    val posts = viewModel.posts.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.getAllPosts()
+    }
 
     Box(
         modifier = modifier
@@ -77,33 +86,50 @@ fun FeedScreen(
                 }
             }
         ) { innerPadding ->
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(vertical = 24.dp, horizontal = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.community_feed),
-                    style = MaterialTheme.typography.displayMedium,
-                    color = BonkWhite
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.feed_description),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = BonkWhite,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(mockPosts) { post ->
-                        PostCard(post = post)
-                    }
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = stringResource(R.string.community_feed),
+                        style = MaterialTheme.typography.displayMedium,
+                        color = BonkWhite,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.feed_description),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = BonkWhite,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                items(posts.value) { post ->
+                    PostCard(
+                        post = post,
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(32.dp)) // bottom padding
                 }
             }
 
@@ -131,7 +157,6 @@ fun FeedScreen(
                             viewModel.submitPost(
                                 description = description,
                                 imageUri = imageUri,
-                                username = viewModel.username.value ?: "",
                                 userId = viewModel.userId.value ?: "",
                                 context = context
                             ) { success ->
@@ -140,6 +165,7 @@ fun FeedScreen(
                                     setShowCreateSheet(false)
                                     setDescription("")
                                     setImageUri(null)
+                                    viewModel.getAllPosts()
                                 }
                             }
                         },
