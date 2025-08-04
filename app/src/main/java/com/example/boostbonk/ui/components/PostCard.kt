@@ -29,17 +29,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.model.PostWithUser
 import com.example.boostbonk.solana.sendBonkFunctionRequest
+import com.example.boostbonk.solana.walletAdapter
 import com.example.boostbonk.ui.components.ColumnValue
 import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.utils.formatBonkEarned
 import com.example.boostbonk.utils.formatRelativeTime
-import com.example.boostbonk.solana.walletAdapter
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
@@ -52,7 +52,8 @@ fun PostCard(
     post: PostWithUser,
     navController: NavController,
     viewModel: BoostBonkViewModel,
-    sender: ActivityResultSender
+    sender: ActivityResultSender,
+    onReload: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -212,7 +213,9 @@ fun PostCard(
                                     ) { result ->
                                         setIsLoading(false)
                                         setShowBoostModal(false)
-                                        if (result) viewModel.loadAllPosts()
+                                        if (result) {
+                                            onReload()
+                                        }
                                     }
                                 }
                                 is TransactionResult.NoWalletFound -> {

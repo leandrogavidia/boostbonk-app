@@ -13,6 +13,7 @@ import com.example.boostbonk.data.model.PostWithUser
 import com.example.boostbonk.data.model.UserInfo
 import com.example.boostbonk.data.model.BonkEarnedRanking
 import com.example.boostbonk.data.model.BoostRanking
+import com.example.boostbonk.data.model.UserStatsSummary
 import com.example.boostbonk.data.model.WeeklyStatsSummary
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
@@ -57,6 +58,9 @@ class BoostBonkViewModel : ViewModel() {
     private val _userPosts = MutableStateFlow<List<PostWithUser>>(emptyList())
     val userPosts: StateFlow<List<PostWithUser>> = _userPosts
 
+    private val _isLoadingUserPosts = MutableStateFlow(true)
+    val isLoadingUserPosts: StateFlow<Boolean> = _isLoadingUserPosts
+
     private val _weeklyBoostRanking = MutableStateFlow<List<BoostRanking>>(emptyList())
     val weeklyBoostRanking: StateFlow<List<BoostRanking>> = _weeklyBoostRanking
 
@@ -96,6 +100,12 @@ class BoostBonkViewModel : ViewModel() {
 
     private val _isLoadingAllTimeStats = MutableStateFlow(true)
     val isLoadingAllTimeStats: StateFlow<Boolean> = _isLoadingAllTimeStats
+
+    private val _userStats = MutableStateFlow<UserStatsSummary?>(null)
+    val userStats: StateFlow<UserStatsSummary?> = _userStats
+
+    private val _isLoadingUserStats = MutableStateFlow(false)
+    val isLoadingUserStats: StateFlow<Boolean> = _isLoadingUserStats
 
     init {
         loadSession()
@@ -286,6 +296,7 @@ class BoostBonkViewModel : ViewModel() {
 
     fun loadPostsByUsername(username: String) {
         viewModelScope.launch {
+            _isLoadingUserPosts.value = true
             try {
                 val result = supabase
                     .from("posts_with_user")
@@ -299,6 +310,8 @@ class BoostBonkViewModel : ViewModel() {
                 _userPosts.value = result
             } catch (e: Exception) {
                 Log.e("loadPostsByUsername", "Failed to load user posts", e)
+            } finally {
+                _isLoadingUserPosts.value = false
             }
         }
     }
@@ -407,6 +420,30 @@ class BoostBonkViewModel : ViewModel() {
                 Log.e("Stats", "Failed to fetch all-time stats", e)
             } finally {
                 _isLoadingAllTimeStats.value = false
+            }
+        }
+    }
+
+    fun loadUserStatsByUsername(username: String?) {
+        if (username == null) return
+
+        viewModelScope.launch {
+            _isLoadingUserStats.value = true
+            try {
+                val result = supabase
+                    .from("user_stats_summary")
+                    .select {
+                        filter {
+                            eq("username", username)
+                        }
+                    }
+                    .decodeSingle<UserStatsSummary>()
+
+                _userStats.value = result
+            } catch (e: Exception) {
+                Log.e("UserStats", "Failed to load user stats", e)
+            } finally {
+                _isLoadingUserStats.value = false
             }
         }
     }

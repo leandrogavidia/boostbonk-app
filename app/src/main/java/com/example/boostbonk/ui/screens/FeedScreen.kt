@@ -134,7 +134,8 @@ fun FeedScreen(
                             post = post,
                             navController = navController,
                             viewModel = viewModel,
-                            sender = sender
+                            sender = sender,
+                            onReload = { viewModel.loadAllPosts() }
                         )
                     }
                 }

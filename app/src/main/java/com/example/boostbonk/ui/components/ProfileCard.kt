@@ -1,3 +1,5 @@
+import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,9 +35,18 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
+import com.example.boostbonk.data.model.UserInfo
+import com.example.boostbonk.solana.sendBonkFunctionRequest
+import com.example.boostbonk.solana.walletAdapter
 import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
+import com.example.boostbonk.utils.formatBonkEarned
+import com.funkatronics.encoders.Base58
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
+import com.solana.mobilewalletadapter.clientlib.TransactionResult
+import com.solana.mobilewalletadapter.clientlib.successPayload
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileCard(
@@ -46,13 +57,18 @@ fun ProfileCard(
     isOwnProfile: Boolean,
     viewModel: BoostBonkViewModel,
     fromUserId: String,
-    toUserId: String
-) {
+    toUserId: String,
+    totalBoosts: Int,
+    totalBonkEarned: Double,
+    sender: ActivityResultSender,
+    userInfo: UserInfo? = null,
+    ) {
     val coroutineScope = rememberCoroutineScope()
 
     val (showBoostModal, setShowBoostModal) = remember { mutableStateOf(false) }
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
     val walletAddress = viewModel.walletAddress.collectAsState().value
+    val currentUsername = userInfo?.username ?: viewModel.username.value ?: ""
 
     Card(
         modifier = Modifier
@@ -88,7 +104,6 @@ fun ProfileCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = username,
-
                             style = MaterialTheme.typography.labelLarge,
                             color = BonkOrange
                         )
@@ -116,28 +131,8 @@ fun ProfileCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                StatCard(value = "2,847", label = stringResource(R.string.total_boosts), Modifier.weight(1f))
-                StatCard(value = "156,789", label = stringResource(R.string.total_bonk), Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                RankingCard(rank = "#1", label = stringResource(R.string.week_ranking), Modifier.weight(1f))
-                RankingCard(rank = "#3", label = stringResource(R.string.week_ranking), Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                RankingCard(rank = "#1", label = stringResource(R.string.all_time), Modifier.weight(1f))
-                RankingCard(rank = "#3", label = stringResource(R.string.all_time), Modifier.weight(1f))
+                StatCard(value = totalBoosts.toString(), label = stringResource(R.string.total_boosts), Modifier.weight(1f))
+                StatCard(value = formatBonkEarned(totalBonkEarned), label = stringResource(R.string.total_bonk_earned), Modifier.weight(1f))
             }
         }
     }
@@ -149,44 +144,54 @@ fun ProfileCard(
             isLoading = isLoading,
             onSubmit = { amount ->
                 setIsLoading(true)
-                viewModel.submitBoost(
-                    bonks = amount,
-                    postId = null,
-                    fromUserId = fromUserId,
-                    toUserId = toUserId
-                ) { success ->
-                    setIsLoading(false)
-                    setShowBoostModal(false)
-                    if (success) {
-                        viewModel.loadAllPosts()
+                coroutineScope.launch {
+                    val (success, json) = sendBonkFunctionRequest(
+                        walletAddress ?: "",
+                        amount
+                    )
+                    if (success && json?.has("tx") == true) {
+                        val base64Tx = json.getString("tx")
+                        val decodedTx = Base64.decode(base64Tx, Base64.DEFAULT)
+
+                        val signResult = walletAdapter.transact(sender) {
+                            signAndSendTransactions(arrayOf(decodedTx))
+                        }
+
+                        when (signResult) {
+                            is TransactionResult.Success -> {
+                                val sig = signResult.successPayload?.signatures?.firstOrNull()
+                                val signatureBase58 = sig?.let { Base58.encodeToString(it) }
+                                Log.d("SEND_BONK", "TX Signature: $signatureBase58")
+
+                                viewModel.submitBoost(
+                                    bonks = amount,
+                                    postId = null,
+                                    fromUserId = fromUserId,
+                                    toUserId = toUserId
+                                ) { success ->
+                                    setIsLoading(false)
+                                    setShowBoostModal(false)
+                                    if (success) {
+                                        viewModel.loadPostsByUsername(currentUsername)
+                                        viewModel.loadUserStatsByUsername(currentUsername)
+                                    }
+                                }
+                            }
+                            is TransactionResult.NoWalletFound -> {
+                                Log.e("SEND_BONK", "No wallet found.")
+                                setIsLoading(false)
+                            }
+                            is TransactionResult.Failure -> {
+                                Log.e("SEND_BONK", "Failed to sign/send: ${signResult.e.message}")
+                                setIsLoading(false)
+                            }
+                        }
+                    } else {
+                        Log.e("SEND_BONK", "Failed to fetch transaction from server.")
+                        setIsLoading(false)
                     }
                 }
             }
-        )
-    }
-}
-
-
-
-@Composable
-fun RankingCard(rank: String, label: String, modifier: Modifier = Modifier) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .background(Color(0xFFEEEEEE), shape = RoundedCornerShape(8.dp))
-            .padding(12.dp)
-    ) {
-        Text(
-            rank,
-            fontSize = 18.sp,
-            style = MaterialTheme.typography.labelMedium,
-            color = BonkOrange
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = BonkGray
         )
     }
 }

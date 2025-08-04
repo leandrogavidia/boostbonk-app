@@ -29,12 +29,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.model.UserInfo
 import com.example.boostbonk.ui.components.CreatePostModal
+import com.example.boostbonk.ui.components.skeletons.PostCardSkeleton
+import com.example.boostbonk.ui.components.skeletons.ProfileCardSkeleton
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +53,9 @@ fun ProfileScreen(
 
     val fromUserId = viewModel.userId.collectAsState().value ?: ""
     val toUserId = userInfo?.id ?: ""
+    val isLoadingUserPosts = viewModel.isLoadingUserPosts.collectAsState().value
+    val isLoadingStats = viewModel.isLoadingUserStats.collectAsState().value
+    val userStats = viewModel.userStats.collectAsState().value
 
     val username = userInfo?.username ?: viewModel.username.collectAsState().value ?: ""
     val displayName = userInfo?.fullName ?: viewModel.fullName.collectAsState().value ?: ""
@@ -67,12 +72,13 @@ fun ProfileScreen(
 
     LaunchedEffect(username) {
         viewModel.loadPostsByUsername(username)
+        viewModel.loadUserStatsByUsername(username)
     }
 
     Scaffold(
         containerColor = Color.Transparent,
         floatingActionButton = {
-            if (isOwnProfile) {
+            if (isOwnProfile && !isLoadingUserPosts && !isLoadingStats) {
                 FloatingActionButton(
                     onClick = { setShowCreateSheet(true) },
                     containerColor = BonkOrange
@@ -95,15 +101,23 @@ fun ProfileScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    ProfileCard(
-                        displayName = displayName,
-                        avatarUrl = avatarUrl,
-                        username = "@${username}",
-                        isOwnProfile = isOwnProfile,
-                        viewModel = viewModel,
-                        fromUserId = fromUserId,
-                        toUserId = toUserId
-                    )
+                    if (isLoadingUserPosts || isLoadingStats) {
+                        ProfileCardSkeleton()
+                    } else {
+                        ProfileCard(
+                            displayName = displayName,
+                            avatarUrl = avatarUrl,
+                            username = "@${username}",
+                            isOwnProfile = isOwnProfile,
+                            viewModel = viewModel,
+                            fromUserId = fromUserId,
+                            toUserId = toUserId,
+                            totalBoosts = userStats?.totalBoosts ?: 0,
+                            totalBonkEarned = userStats?.totalBonkEarned ?: 0.0,
+                            sender = sender,
+                            userInfo = userInfo
+                        )
+                    }
                 }
 
                 item {
@@ -114,13 +128,23 @@ fun ProfileScreen(
                         colors = CardDefaults.cardColors(BonkWhite)
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            posts.forEach { post ->
-                                PostCard(
-                                    post = post,
-                                    navController = navController,
-                                    viewModel = viewModel,
-                                    sender = sender
-                                )
+                            if (isLoadingUserPosts || isLoadingStats) {
+                                repeat(3) {
+                                    PostCardSkeleton(modifier = Modifier.padding(horizontal = 16.dp))
+                                }
+                            } else {
+                                posts.forEach { post ->
+                                    PostCard(
+                                        post = post,
+                                        navController = navController,
+                                        viewModel = viewModel,
+                                        sender = sender,
+                                        onReload = {
+                                            viewModel.loadPostsByUsername(username)
+                                            viewModel.loadUserStatsByUsername(username)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
