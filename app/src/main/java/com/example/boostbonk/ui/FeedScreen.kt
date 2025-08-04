@@ -42,13 +42,15 @@ import com.example.boostbonk.ui.components.CreatePostModal
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.ui.theme.BonkYellow
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
     modifier: Modifier = Modifier,
     viewModel: BoostBonkViewModel,
-    navController: NavController
+    navController: NavController,
+    sender: ActivityResultSender
 ) {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -124,7 +126,8 @@ fun FeedScreen(
                     PostCard(
                         post = post,
                         navController = navController,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        sender = sender
                     )
                 }
 

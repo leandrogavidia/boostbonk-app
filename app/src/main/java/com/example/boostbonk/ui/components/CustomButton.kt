@@ -31,7 +31,8 @@ fun CustomButton(
     backgroundColor: Color,
     contentColor: Color = BonkWhite,
     isLoading: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
@@ -41,7 +42,7 @@ fun CustomButton(
         ),
         shape = RoundedCornerShape(12.dp),
         modifier = modifier.height(48.dp),
-        enabled = !isLoading,
+        enabled = !isLoading && enabled,
     ) {
         if (isLoading) {
             androidx.compose.material3.CircularProgressIndicator(

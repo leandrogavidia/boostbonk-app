@@ -57,6 +57,8 @@ class BoostBonkViewModel : ViewModel() {
     private val _weeklyBonkEarnedRanking = MutableStateFlow<List<WeeklyBonkEarnedRanking>>(emptyList())
     val weeklyBonkEarnedRanking: StateFlow<List<WeeklyBonkEarnedRanking>> = _weeklyBonkEarnedRanking
 
+    val walletAddress = MutableStateFlow<String?>(null)
+    val walletAddressPublic: StateFlow<String?> = walletAddress
 
     init {
         loadSession()

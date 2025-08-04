@@ -1,3 +1,5 @@
+import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,12 +32,19 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.boostbonk.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.model.PostWithUser
+import com.example.boostbonk.solana.sendBonkFunctionRequest
 import com.example.boostbonk.ui.components.ColumnValue
 import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.utils.formatBonkEarned
 import com.example.boostbonk.utils.formatRelativeTime
+import com.example.boostbonk.walletAdapter
+import com.funkatronics.encoders.Base58
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
+import com.solana.mobilewalletadapter.clientlib.TransactionResult
+import com.solana.mobilewalletadapter.clientlib.successPayload
+import kotlinx.coroutines.launch
 
 @Composable
 fun PostCard(
@@ -43,6 +52,7 @@ fun PostCard(
     post: PostWithUser,
     navController: NavController,
     viewModel: BoostBonkViewModel,
+    sender: ActivityResultSender
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -50,6 +60,7 @@ fun PostCard(
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
 
     val username = viewModel.username.collectAsState().value ?: ""
+    val walletAddress = viewModel.walletAddress.collectAsState().value
     val isOwnProfile = post.username == username
     val userId = viewModel.userId.collectAsState().value ?: ""
 
@@ -158,6 +169,7 @@ fun PostCard(
             if (!isOwnProfile) {
                 Spacer(modifier = Modifier.width(20.dp))
                 BoostButton(
+                    enabled = (walletAddress != null),
                     modifier = Modifier.weight(1f),
                     onClick = { setShowBoostModal(true) }
                 )
@@ -173,16 +185,48 @@ fun PostCard(
                 isLoading = isLoading,
                 onSubmit = { amount ->
                     setIsLoading(true)
-                    viewModel.submitBoost(
-                        bonks = amount,
-                        postId = post.id,
-                        fromUserId = userId,
-                        toUserId = post.userId
-                    ) { success ->
-                        setIsLoading(false)
-                        setShowBoostModal(false)
-                        if (success) {
-                            viewModel.getAllPosts()
+                    coroutineScope.launch {
+                        val (success, json) = sendBonkFunctionRequest(
+                            walletAddress ?: "",
+                            amount
+                        )
+                        if (success && json?.has("tx") == true) {
+                            val base64Tx = json.getString("tx")
+                            val decodedTx = Base64.decode(base64Tx, Base64.DEFAULT)
+
+                            val signResult = walletAdapter.transact(sender) {
+                                signAndSendTransactions(arrayOf(decodedTx))
+                            }
+
+                            when (signResult) {
+                                is TransactionResult.Success -> {
+                                    val sig = signResult.successPayload?.signatures?.firstOrNull()
+                                    val signatureBase58 = sig?.let { Base58.encodeToString(it) }
+                                    Log.d("SEND_BONK", "TX Signature: $signatureBase58")
+
+                                    viewModel.submitBoost(
+                                        bonks = amount,
+                                        postId = post.id,
+                                        fromUserId = userId,
+                                        toUserId = post.userId
+                                    ) { result ->
+                                        setIsLoading(false)
+                                        setShowBoostModal(false)
+                                        if (result) viewModel.getAllPosts()
+                                    }
+                                }
+                                is TransactionResult.NoWalletFound -> {
+                                    Log.e("SEND_BONK", "No wallet found.")
+                                    setIsLoading(false)
+                                }
+                                is TransactionResult.Failure -> {
+                                    Log.e("SEND_BONK", "Failed to sign/send: ${signResult.e.message}")
+                                    setIsLoading(false)
+                                }
+                            }
+                        } else {
+                            Log.e("SEND_BONK", "Failed to fetch transaction from server.")
+                            setIsLoading(false)
                         }
                     }
                 }

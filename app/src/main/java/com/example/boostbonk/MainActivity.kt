@@ -8,6 +8,7 @@ import RankingScreen
 import Screen
 import WalletScreen
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,22 +25,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.boostbonk.ui.components.TopAppBarWithWallet
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkYellow
 import com.example.boostbonk.ui.theme.BoostBonkTheme
+import com.example.boostbonk.utils.Base58
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
+import com.solana.mobilewalletadapter.clientlib.TransactionResult
 import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     private val supabase = SupabaseClientProvider.client
     private val viewModel: BoostBonkViewModel by viewModels()
+    private lateinit var sender: ActivityResultSender
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        sender = ActivityResultSender(this)
 
         enableEdgeToEdge()
 
@@ -60,6 +71,31 @@ class MainActivity : ComponentActivity() {
             BoostBonkTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        TopAppBarWithWallet(
+                            isLoggedIn = sessionState.value,
+                            walletAddress = viewModel.walletAddressPublic.collectAsState().value,
+                            onConnectWallet = {
+                                lifecycleScope.launch {
+                                    val result = walletAdapter.connect(sender)
+
+                                    when (result) {
+                                        is TransactionResult.Success -> {
+                                            val pubKeyBytes = result.authResult.accounts.first().publicKey
+                                            val pubKeyBase58 = Base58.encode(pubKeyBytes)
+                                            viewModel.walletAddress.value = pubKeyBase58
+                                        }
+                                        is TransactionResult.NoWalletFound -> {
+                                            Log.e("Wallet", "No wallet found.")
+                                        }
+                                        is TransactionResult.Failure -> {
+                                            Log.e("Wallet", "Failed to connect: ${result.e.message}")
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    },
                     bottomBar = {
                         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
                         if (sessionState.value && currentRoute != Screen.Login.route) {
@@ -92,7 +128,8 @@ class MainActivity : ComponentActivity() {
                             composable(Screen.Feed.route) {
                                 FeedScreen(
                                     viewModel = viewModel,
-                                    navController = navController
+                                    navController = navController,
+                                    sender = sender
                                 )
                             }
                             composable(Screen.Wallet.route) {
@@ -109,7 +146,8 @@ class MainActivity : ComponentActivity() {
                                 ProfileScreen(
                                     viewModel = viewModel,
                                     userInfo = userInfo,
-                                    navController = navController
+                                    navController = navController,
+                                    sender = sender
                                 )
                             }
                             composable(Screen.Ranking.route) {

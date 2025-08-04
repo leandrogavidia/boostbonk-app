@@ -12,13 +12,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,6 +52,7 @@ fun ProfileCard(
 
     val (showBoostModal, setShowBoostModal) = remember { mutableStateOf(false) }
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
+    val walletAddress = viewModel.walletAddress.collectAsState().value
 
     Card(
         modifier = Modifier
@@ -99,10 +100,11 @@ fun ProfileCard(
 
             if(!isOwnProfile) {
                 CustomButton(
+                    enabled = (walletAddress != null),
                     onClick = { setShowBoostModal(true) },
                     icon = Icons.Filled.RocketLaunch,
                     backgroundColor = BonkOrange,
-                    text = stringResource(R.string.boost),
+                    text = if (walletAddress != null) stringResource(R.string.boost) else stringResource(R.string.no_wallet),
                     contentColor = BonkWhite,
                     modifier = Modifier.fillMaxWidth()
                 )

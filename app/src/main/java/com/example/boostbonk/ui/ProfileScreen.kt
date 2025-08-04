@@ -35,6 +35,7 @@ import com.example.boostbonk.data.model.UserInfo
 import com.example.boostbonk.ui.components.CreatePostModal
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +43,8 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     viewModel: BoostBonkViewModel,
     userInfo: UserInfo? = null,
-    navController: NavController
+    navController: NavController,
+    sender: ActivityResultSender
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -116,7 +118,8 @@ fun ProfileScreen(
                                 PostCard(
                                     post = post,
                                     navController = navController,
-                                    viewModel = viewModel
+                                    viewModel = viewModel,
+                                    sender = sender
                                 )
                             }
                         }
