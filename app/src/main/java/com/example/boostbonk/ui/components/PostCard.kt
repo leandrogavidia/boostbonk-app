@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.boostbonk.BoostBonkViewModel
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.model.PostWithUser
 import com.example.boostbonk.solana.sendBonkFunctionRequest
@@ -39,7 +39,7 @@ import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.utils.formatBonkEarned
 import com.example.boostbonk.utils.formatRelativeTime
-import com.example.boostbonk.walletAdapter
+import com.example.boostbonk.solana.walletAdapter
 import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
@@ -212,7 +212,7 @@ fun PostCard(
                                     ) { result ->
                                         setIsLoading(false)
                                         setShowBoostModal(false)
-                                        if (result) viewModel.getAllPosts()
+                                        if (result) viewModel.loadAllPosts()
                                     }
                                 }
                                 is TransactionResult.NoWalletFound -> {

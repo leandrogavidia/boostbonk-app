@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.rpc.core)
     implementation(libs.multimult)
     implementation(libs.ktor.client.cio)
+    implementation(libs.accompanist.placeholder.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

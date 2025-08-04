@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.boostbonk.BoostBonkViewModel
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.model.UserInfo
 import com.example.boostbonk.ui.components.CreatePostModal

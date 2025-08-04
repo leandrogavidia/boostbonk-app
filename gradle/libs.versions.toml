@@ -21,6 +21,7 @@ solanaWalletAdapter = "2.0.0"
 web3Solana = "0.2.2"
 rpcCore = "0.2.3"
 multimult = "0.2.0"
+accompanist = "0.36.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +58,7 @@ web3-solana = { group = "com.solanamobile", name = "web3-solana", version.ref = 
 rpc-core = { group = "com.solanamobile", name = "rpc-core", version.ref = "rpcCore" }
 multimult = { group = "io.github.funkatronics", name = "multimult", version.ref = "multimult" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+accompanist-placeholder-material3 = { module = "com.google.accompanist:accompanist-placeholder-material3", version.ref = "accompanist" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

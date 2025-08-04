@@ -36,9 +36,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.boostbonk.BoostBonkViewModel
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.ui.components.CreatePostModal
+import com.example.boostbonk.ui.components.skeletons.PostCardSkeleton
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.ui.theme.BonkYellow
@@ -61,9 +62,10 @@ fun FeedScreen(
     val (imageUri, setImageUri) = remember { mutableStateOf<Uri?>(null) }
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
     val posts = viewModel.posts.collectAsState()
+    val isLoadingPosts = viewModel.isLoadingPosts.collectAsState().value
 
     LaunchedEffect(Unit) {
-        viewModel.getAllPosts()
+        viewModel.loadAllPosts()
     }
 
     Box(
@@ -122,13 +124,19 @@ fun FeedScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                items(posts.value) { post ->
-                    PostCard(
-                        post = post,
-                        navController = navController,
-                        viewModel = viewModel,
-                        sender = sender
-                    )
+                if (isLoadingPosts && posts.value.isEmpty()) {
+                    items(5) {
+                        PostCardSkeleton()
+                    }
+                } else {
+                    items(posts.value) { post ->
+                        PostCard(
+                            post = post,
+                            navController = navController,
+                            viewModel = viewModel,
+                            sender = sender
+                        )
+                    }
                 }
 
                 item {
@@ -168,7 +176,7 @@ fun FeedScreen(
                                     setShowCreateSheet(false)
                                     setDescription("")
                                     setImageUri(null)
-                                    viewModel.getAllPosts()
+                                    viewModel.loadAllPosts()
                                 }
                             }
                         },

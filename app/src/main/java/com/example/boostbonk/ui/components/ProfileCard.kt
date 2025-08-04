@@ -31,7 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
-import com.example.boostbonk.BoostBonkViewModel
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkOrange
@@ -158,7 +158,7 @@ fun ProfileCard(
                     setIsLoading(false)
                     setShowBoostModal(false)
                     if (success) {
-                        viewModel.getAllPosts()
+                        viewModel.loadAllPosts()
                     }
                 }
             }

@@ -1,16 +1,19 @@
-package com.example.boostbonk
+package com.example.boostbonk.viewmodel
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.boostbonk.SupabaseClientProvider
+import com.example.boostbonk.data.model.AllTimeStatsSummary
 import com.example.boostbonk.data.model.Boost
-import com.example.boostbonk.data.model.WeeklyBoostRanking
 import com.example.boostbonk.data.model.Post
 import com.example.boostbonk.data.model.PostWithUser
 import com.example.boostbonk.data.model.UserInfo
-import com.example.boostbonk.data.model.WeeklyBonkEarnedRanking
+import com.example.boostbonk.data.model.BonkEarnedRanking
+import com.example.boostbonk.data.model.BoostRanking
+import com.example.boostbonk.data.model.WeeklyStatsSummary
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
@@ -45,23 +48,60 @@ class BoostBonkViewModel : ViewModel() {
     private val _posts = MutableStateFlow<List<PostWithUser>>(emptyList())
     val posts: StateFlow<List<PostWithUser>> = _posts
 
+    private val _isLoadingPosts = MutableStateFlow(true)
+    val isLoadingPosts: StateFlow<Boolean> = _isLoadingPosts
+
     private val _selectedUser = MutableStateFlow<UserInfo?>(null)
     val selectedUser: StateFlow<UserInfo?> = _selectedUser
 
     private val _userPosts = MutableStateFlow<List<PostWithUser>>(emptyList())
     val userPosts: StateFlow<List<PostWithUser>> = _userPosts
 
-    private val _weeklyBoostRanking = MutableStateFlow<List<WeeklyBoostRanking>>(emptyList())
-    val weeklyBoostRanking: StateFlow<List<WeeklyBoostRanking>> = _weeklyBoostRanking
+    private val _weeklyBoostRanking = MutableStateFlow<List<BoostRanking>>(emptyList())
+    val weeklyBoostRanking: StateFlow<List<BoostRanking>> = _weeklyBoostRanking
 
-    private val _weeklyBonkEarnedRanking = MutableStateFlow<List<WeeklyBonkEarnedRanking>>(emptyList())
-    val weeklyBonkEarnedRanking: StateFlow<List<WeeklyBonkEarnedRanking>> = _weeklyBonkEarnedRanking
+    private val _weeklyBonkEarnedRanking =
+        MutableStateFlow<List<BonkEarnedRanking>>(emptyList())
+    val weeklyBonkEarnedRanking: StateFlow<List<BonkEarnedRanking>> = _weeklyBonkEarnedRanking
+
+    private val _isLoadingWeeklyBonkEarnedRanking = MutableStateFlow(true)
+    val isLoadingWeeklyBonkEarnedRanking: StateFlow<Boolean> = _isLoadingWeeklyBonkEarnedRanking
+
+    private val _isLoadingWeeklyBoostRanking = MutableStateFlow(true)
+    val isLoadingWeeklyBoostRanking: StateFlow<Boolean> = _isLoadingWeeklyBoostRanking
+
+    private val _allTimeBonkEarnedRanking = MutableStateFlow<List<BonkEarnedRanking>>(emptyList())
+    val allTimeBonkEarnedRanking: StateFlow<List<BonkEarnedRanking>> = _allTimeBonkEarnedRanking
+
+    private val _isLoadingAllTimeBonkEarnedRanking = MutableStateFlow(true)
+    val isLoadingAllTimeBonkEarnedRanking: StateFlow<Boolean> = _isLoadingAllTimeBonkEarnedRanking
+
+    private val _allTimeBoostRanking = MutableStateFlow<List<BoostRanking>>(emptyList())
+    val allTimeBoostRanking: StateFlow<List<BoostRanking>> = _allTimeBoostRanking
+
+    private val _isLoadingAllTimeBoostRanking = MutableStateFlow(true)
+    val isLoadingAllTimeBoostRanking: StateFlow<Boolean> = _isLoadingAllTimeBoostRanking
 
     val walletAddress = MutableStateFlow<String?>(null)
     val walletAddressPublic: StateFlow<String?> = walletAddress
 
+    private val _weeklyStats = MutableStateFlow<WeeklyStatsSummary?>(null)
+    val weeklyStats: StateFlow<WeeklyStatsSummary?> = _weeklyStats
+
+    private val _allTimeStats = MutableStateFlow<AllTimeStatsSummary?>(null)
+    val allTimeStats: StateFlow<AllTimeStatsSummary?> = _allTimeStats
+
+    private val _isLoadingWeeklyStats = MutableStateFlow(true)
+    val isLoadingWeeklyStats: StateFlow<Boolean> = _isLoadingWeeklyStats
+
+    private val _isLoadingAllTimeStats = MutableStateFlow(true)
+    val isLoadingAllTimeStats: StateFlow<Boolean> = _isLoadingAllTimeStats
+
     init {
         loadSession()
+        loadAllTimeStats()
+        loadWeeklyStats()
+        loadAllPosts()
     }
 
     private fun loadSession() {
@@ -107,15 +147,14 @@ class BoostBonkViewModel : ViewModel() {
         }
     }
 
-    fun getImageBytesFromUri(context: android.content.Context, uri: Uri): ByteArray {
+    fun getImageBytesFromUri(context: Context, uri: Uri): ByteArray {
         val inputStream = context.contentResolver.openInputStream(uri)
         return inputStream?.readBytes() ?: byteArrayOf()
     }
 
-
-
-    fun getAllPosts() {
+    fun loadAllPosts() {
         viewModelScope.launch {
+            _isLoadingPosts.value = true
             try {
                 val result = supabase
                     .from("posts_with_user")
@@ -124,13 +163,13 @@ class BoostBonkViewModel : ViewModel() {
                     .sortedByDescending { it.createdAt }
 
                 _posts.value = result
-
             } catch (e: Exception) {
                 Log.e("getAllPosts", "Failed to load posts", e)
+            } finally {
+                _isLoadingPosts.value = false
             }
         }
     }
-
     fun submitPost(
         context: Context,
         description: String,
@@ -266,35 +305,109 @@ class BoostBonkViewModel : ViewModel() {
 
     fun loadWeeklyBoostRanking() {
         viewModelScope.launch {
+            _isLoadingWeeklyBoostRanking.value = true
             try {
                 val result = supabase
                     .from("weekly_boost_ranking")
                     .select()
-                    .decodeList<WeeklyBoostRanking>()
+                    .decodeList<BoostRanking>()
 
                 _weeklyBoostRanking.value = result
             } catch (e: Exception) {
                 Log.e("Ranking", "Failed to fetch weekly boost ranking", e)
+            } finally {
+                _isLoadingWeeklyBoostRanking.value = false
             }
         }
     }
 
     fun loadWeeklyBonkEarnedRanking() {
         viewModelScope.launch {
+            _isLoadingWeeklyBonkEarnedRanking.value = true
             try {
                 val result = supabase
                     .from("weekly_bonk_earned_ranking")
                     .select()
-                    .decodeList<WeeklyBonkEarnedRanking>()
+                    .decodeList<BonkEarnedRanking>()
 
                 _weeklyBonkEarnedRanking.value = result
             } catch (e: Exception) {
                 Log.e("Ranking", "Failed to fetch weekly bonk earned ranking", e)
+            } finally {
+                _isLoadingWeeklyBonkEarnedRanking.value = false
             }
         }
     }
 
+    fun loadAllTimeBonkEarnedRanking() {
+        viewModelScope.launch {
+            _isLoadingAllTimeBonkEarnedRanking.value = true
+            try {
+                val result = supabase
+                    .from("all_time_bonk_earned_ranking")
+                    .select()
+                    .decodeList<BonkEarnedRanking>()
 
+                _allTimeBonkEarnedRanking.value = result
+            } catch (e: Exception) {
+                Log.e("Ranking", "Failed to fetch all-time bonk earned ranking", e)
+            } finally {
+                _isLoadingAllTimeBonkEarnedRanking.value = false
+            }
+        }
+    }
+
+    fun loadAllTimeBoostRanking() {
+        viewModelScope.launch {
+            _isLoadingAllTimeBoostRanking.value = true
+            try {
+                val result = supabase
+                    .from("all_time_boost_ranking")
+                    .select()
+                    .decodeList<BoostRanking>()
+
+                _allTimeBoostRanking.value = result
+            } catch (e: Exception) {
+                Log.e("Ranking", "Failed to fetch all-time boost ranking", e)
+            } finally {
+                _isLoadingAllTimeBoostRanking.value = false
+            }
+        }
+    }
+
+    fun loadWeeklyStats() {
+        viewModelScope.launch {
+            _isLoadingWeeklyStats.value = true
+            try {
+                val result = supabase
+                    .from("weekly_stats_summary")
+                    .select()
+                    .decodeSingle<WeeklyStatsSummary>()
+
+                _weeklyStats.value = result
+            } catch (e: Exception) {
+                Log.e("Stats", "Failed to fetch weekly stats", e)
+            } finally {
+                _isLoadingWeeklyStats.value = false
+            }
+        }
+    }
+
+    fun loadAllTimeStats() {
+        viewModelScope.launch {
+            _isLoadingAllTimeStats.value = true
+            try {
+                val result = supabase
+                    .from("all_time_stats_summary")
+                    .select()
+                    .decodeSingle<AllTimeStatsSummary>()
+
+                _allTimeStats.value = result
+            } catch (e: Exception) {
+                Log.e("Stats", "Failed to fetch all-time stats", e)
+            } finally {
+                _isLoadingAllTimeStats.value = false
+            }
+        }
+    }
 }
-
-

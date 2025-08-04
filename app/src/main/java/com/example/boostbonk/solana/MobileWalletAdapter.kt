@@ -1,4 +1,4 @@
-package com.example.boostbonk
+package com.example.boostbonk.solana
 
 import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.*
