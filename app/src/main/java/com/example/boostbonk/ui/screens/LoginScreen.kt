@@ -1,3 +1,4 @@
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -26,25 +27,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.ui.theme.BonkBlack
 import com.example.boostbonk.ui.theme.BonkGray
 import com.example.boostbonk.ui.theme.BonkWhite
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Twitter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import java.security.MessageDigest
-import java.util.UUID
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
-    supabase: SupabaseClient
+    supabase: SupabaseClient,
 ) {
     val context = LocalContext.current
     val authManager = remember { AuthManager(context, supabase) }
@@ -109,11 +108,7 @@ fun LoginScreen(
                     scope.launch {
                         authManager.signUpWithX().collect { response ->
                             when (response) {
-                                is AuthResponse.Success -> {
-                                    navController.navigate("feed") {
-                                        popUpTo("login") { inclusive = true }
-                                    }
-                                }
+                                is AuthResponse.Success -> {}
                                 is AuthResponse.Error -> {
                                     Log.e("Auth", "Error: ${response.message}")
                                 }
@@ -154,7 +149,7 @@ class AuthManager(
 
     fun signUpWithX(): Flow<AuthResponse> = flow {
         try {
-            supabase.auth.signUpWith(
+            supabase.auth.signInWith(
                 provider = Twitter,
                 redirectUrl = "boostbonk://auth/callback"
             )
@@ -164,22 +159,11 @@ class AuthManager(
             emit(AuthResponse.Error(e.localizedMessage))
         }
     }
-
-    fun createNonce(): String {
-        val rawNonce = UUID.randomUUID().toString()
-        val bytes = rawNonce.toByteArray()
-        val md = MessageDigest.getInstance("SHA-256")
-        val digest = md.digest(bytes)
-
-        return digest.fold("") { str, it ->
-            str + "%02x".format(it)
-        }
-    }
 }
 
 /* @Preview(
     showBackground = true,
-    apiLevel = 34 // o 33 o 35
+    apiLevel = 34
 )
 @Composable
 fun LoginScreenPreview() {

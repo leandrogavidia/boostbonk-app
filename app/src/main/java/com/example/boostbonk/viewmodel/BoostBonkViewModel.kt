@@ -114,7 +114,7 @@ class BoostBonkViewModel : ViewModel() {
         loadAllPosts()
     }
 
-    private fun loadSession() {
+    fun loadSession() {
         viewModelScope.launch {
             val session = supabase.auth.currentSessionOrNull()
             val user = session?.user

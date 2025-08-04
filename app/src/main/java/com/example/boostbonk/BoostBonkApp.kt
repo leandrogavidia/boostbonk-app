@@ -3,14 +3,17 @@ package com.example.boostbonk
 import BottomNavBar
 import FeedScreen
 import LoginScreen
+import NavigationRoutes
 import ProfileScreen
 import RankingScreen
-import NavigationRoutes
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,9 +21,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -38,6 +46,7 @@ import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.launch
 
@@ -49,11 +58,10 @@ fun BoostBonkApp(
     viewModel: BoostBonkViewModel = viewModel()
 ) {
     val navController = rememberNavController()
-    val currentSessionState = produceState<UserSession?>(initialValue = null) {
-        value = supabase.auth.currentSessionOrNull()
-    }
-    val currentSession = currentSessionState.value
-    val isLoggedIn = currentSession != null
+    val sessionStatus = supabase.auth.sessionStatus.collectAsState(initial = null)
+    val isLoggedIn = sessionStatus.value is SessionStatus.Authenticated
+    val isLoading = sessionStatus.value == null
+    val session = (sessionStatus.value as? SessionStatus.Authenticated)?.session
 
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
@@ -63,38 +71,64 @@ fun BoostBonkApp(
         }
     }
 
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BonkOrange),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.boostbonk_logo),
+                contentDescription = stringResource(R.string.boostbonk_logo),
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+            )
+        }
+        return
+    }
+
     BoostBonkTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                TopAppBarWithWallet(
-                    isLoggedIn = isLoggedIn,
-                    walletAddress = viewModel.walletAddressPublic.collectAsState().value,
-                    onConnectWallet = {
-                        lifecycleScope.launch {
-                            val result = walletAdapter.connect(sender)
-                            when (result) {
-                                is TransactionResult.Success -> {
-                                    val pubKeyBytes = result.authResult.accounts.first().publicKey
-                                    val pubKeyBase58 = Base58.encode(pubKeyBytes)
-                                    viewModel.walletAddress.value = pubKeyBase58
-                                }
-                                is TransactionResult.NoWalletFound -> {
-                                    Log.e("Wallet", "No wallet found.")
-                                }
-                                is TransactionResult.Failure -> {
-                                    Log.e("Wallet", "Failed to connect: ${result.e.message}")
+                val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+                val showBars = currentRoute != null && currentRoute != NavigationRoutes.Login.route
+
+                if (showBars) {
+                    TopAppBarWithWallet(
+                        isLoggedIn = true,
+                        walletAddress = viewModel.walletAddressPublic.collectAsState().value,
+                        onConnectWallet = {
+                            lifecycleScope.launch {
+                                val result = walletAdapter.connect(sender)
+                                when (result) {
+                                    is TransactionResult.Success -> {
+                                        val pubKeyBytes = result.authResult.accounts.first().publicKey
+                                        val pubKeyBase58 = Base58.encode(pubKeyBytes)
+                                        viewModel.walletAddress.value = pubKeyBase58
+                                    }
+                                    is TransactionResult.NoWalletFound -> {
+                                        Log.e("Wallet", "No wallet found.")
+                                    }
+                                    is TransactionResult.Failure -> {
+                                        Log.e("Wallet", "Failed to connect: ${result.e.message}")
+                                    }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                }
+
             },
             bottomBar = {
                 val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                if (isLoggedIn && currentRoute != NavigationRoutes.Login.route) {
+                val showBars = currentRoute != null && currentRoute != NavigationRoutes.Login.route
+
+                if (showBars) {
                     BottomNavBar(
-                        navController,
+                        navController = navController,
                         currentUsername = viewModel.username.collectAsState().value ?: ""
                     )
                 }
@@ -115,7 +149,6 @@ fun BoostBonkApp(
                 NavHost(navController, startDestination = NavigationRoutes.Login.route) {
                     composable(NavigationRoutes.Login.route) {
                         LoginScreen(
-                            navController = navController,
                             supabase = supabase,
                         )
                     }
