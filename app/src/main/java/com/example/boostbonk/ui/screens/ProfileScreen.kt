@@ -59,7 +59,7 @@ fun ProfileScreen(
     val username = userInfo?.username ?: viewModel.username.collectAsState().value ?: ""
     val displayName = userInfo?.fullName ?: viewModel.fullName.collectAsState().value ?: ""
     val avatarUrl = userInfo?.avatarUrl ?: viewModel.avatarUrl.collectAsState().value ?: ""
-    val userWalletAddress = userInfo?.walletAddress ?: viewModel.userWalletAddress.collectAsState().value ?: ""
+    val userWalletAddress = userInfo?.walletAddress ?: viewModel.profileWalletAddress.collectAsState().value ?: ""
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val (showCreateSheet, setShowCreateSheet) = remember { mutableStateOf(false) }

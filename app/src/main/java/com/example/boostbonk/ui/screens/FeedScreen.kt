@@ -64,11 +64,12 @@ fun FeedScreen(
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
     val posts = viewModel.posts.collectAsState()
     val isLoadingPosts = viewModel.isLoadingPosts.collectAsState().value
-    val userWalletAddress = viewModel.userWalletAddress.collectAsState().value
+    val walletAddress = viewModel.walletAddress.collectAsState().value
     val username = viewModel.username.collectAsState().value ?: ""
 
     LaunchedEffect(Unit) {
         viewModel.loadAllPosts()
+        viewModel.loadWalletAddress(username)
     }
 
     Box(
@@ -89,7 +90,7 @@ fun FeedScreen(
                     onClick = { setShowCreateSheet(true) },
                     containerColor = BonkOrange
                 ) {
-                    if (userWalletAddress.isNullOrEmpty()) {
+                    if (walletAddress.isNullOrEmpty()) {
                         Text(
                             modifier = Modifier
                                 .padding(vertical = 4.dp, horizontal = 16.dp)

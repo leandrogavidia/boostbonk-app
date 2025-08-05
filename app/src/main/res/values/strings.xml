@@ -57,4 +57,5 @@
     <string name="update_wallet">Update Wallet</string>
     <string name="wallet_address">Wallet address</string>
     <string name="enter_wallet_address">Enter wallet address</string>
+    <string name="post_image">Post image</string>
 </resources>

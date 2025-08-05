@@ -122,7 +122,7 @@ fun PostCard(
         post.image?.takeIf { it.isNotBlank() }?.let { imageUrl ->
             Image(
                 painter = rememberAsyncImagePainter(imageUrl),
-                contentDescription = "Post image",
+                contentDescription = stringResource(R.string.post_image),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)

@@ -97,7 +97,7 @@ fun BoostBonkApp(
                 if (showBars) {
                     TopAppBarWithWallet(
                         isLoggedIn = true,
-                        walletAddress = viewModel.connectedWalletAddressPublic.collectAsState().value,
+                        walletAddress = viewModel.connectedWalletAddress.collectAsState().value,
                         onConnectWallet = {
                             lifecycleScope.launch {
                                 val result = walletAdapter.connect(sender)
@@ -105,7 +105,7 @@ fun BoostBonkApp(
                                     is TransactionResult.Success -> {
                                         val pubKeyBytes = result.authResult.accounts.first().publicKey
                                         val pubKeyBase58 = Base58.encode(pubKeyBytes)
-                                        viewModel.connectedWalletAddress.value = pubKeyBase58
+                                        viewModel._connectedWalletAddress.value = pubKeyBase58
                                     }
                                     is TransactionResult.NoWalletFound -> {
                                         Log.e("Wallet", "No wallet found.")

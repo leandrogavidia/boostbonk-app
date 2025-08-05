@@ -86,11 +86,14 @@ class BoostBonkViewModel : ViewModel() {
     private val _isLoadingAllTimeBoostRanking = MutableStateFlow(true)
     val isLoadingAllTimeBoostRanking: StateFlow<Boolean> = _isLoadingAllTimeBoostRanking
 
-    val connectedWalletAddress = MutableStateFlow<String?>(null)
-    val connectedWalletAddressPublic: StateFlow<String?> = connectedWalletAddress
+    val _walletAddress = MutableStateFlow<String?>(null)
+    val walletAddress: StateFlow<String?> = _walletAddress
 
-    val userWalletAddress = MutableStateFlow<String?>(null)
-    val userWalletAddressPublic: StateFlow<String?> = userWalletAddress
+    val _connectedWalletAddress = MutableStateFlow<String?>(null)
+    val connectedWalletAddress: StateFlow<String?> = _connectedWalletAddress
+
+    val _profileWalletAddress = MutableStateFlow<String?>(null)
+    val profileWalletAddress: StateFlow<String?> = _profileWalletAddress
 
     private val _weeklyStats = MutableStateFlow<WeeklyStatsSummary?>(null)
     val weeklyStats: StateFlow<WeeklyStatsSummary?> = _weeklyStats
@@ -149,6 +152,7 @@ class BoostBonkViewModel : ViewModel() {
                             "full_name" to fullName
                         )
                     )
+
                     Log.d("SessionCheck", "✅ User upserted into 'users' table")
                 } catch (e: Exception) {
                     Log.e("SessionCheck", "❌ Failed to upsert user: ${e.message}")
@@ -468,11 +472,38 @@ class BoostBonkViewModel : ViewModel() {
                     }
                 }
 
-                userWalletAddress.value = newWalletAddress
+                _profileWalletAddress.value = newWalletAddress
                 onComplete(true)
             } catch (e: Exception) {
                 Log.e("WalletUpdate", "Failed to update wallet address", e)
                 onComplete(false)
+            }
+        }
+    }
+
+    fun loadWalletAddress(username: String) {
+        if (username.isEmpty()) {
+            Log.e("walletresult", "empty username")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val result = supabase
+                    .from("users")
+                    .select {
+                        filter {
+                            eq("username", username)
+                        }
+                    }
+                    .decodeSingle<Map<String, String>>()
+
+                val walletAddress = result["wallet_address"]
+                _walletAddress.value = walletAddress
+
+                Log.d("walletresult", "✅ Wallet: $walletAddress")
+            } catch (e: Exception) {
+                Log.e("walletresult", "❌ Failed to load wallet address", e)
             }
         }
     }
