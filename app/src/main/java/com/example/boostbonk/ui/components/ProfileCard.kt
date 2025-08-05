@@ -190,6 +190,7 @@ fun ProfileCard(
                 coroutineScope.launch {
                     val (success, json) = sendBonkFunctionRequest(
                         connectedWalletAddress ?: "",
+                        userWalletAddress ?: "",
                         amount
                     )
                     if (success && json?.has("tx") == true) {

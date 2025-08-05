@@ -22,19 +22,25 @@ private val client = HttpClient(CIO) {
 }
 
 @Serializable
-data class BonkRequestBody(val from: String, val to: String, val amount: Double)
+data class BonkRequestBody(
+    val from: String,
+    val to: String,
+    val amount: Double
+)
 
 suspend fun sendBonkFunctionRequest(
     from: String,
+    to: String,
     amount: Double
 ): Pair<Boolean, JSONObject?> {
+    val token = ""
     return try {
         val response = client.post("https://ekjjucdrpkqujyjhrjws.supabase.co/functions/v1/send-bonk") {
             contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVramp1Y2RycGtxdWp5amhyandzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MTM0MzQsImV4cCI6MjA2OTM4OTQzNH0.QhYvfL__NInC44o0ApQW9FKUblAdFDH1WHVEGfAvc7I")
+            header("Authorization", "Bearer $token")
             setBody(BonkRequestBody(
                 from,
-                "32xCupbneTQyyJgssmTkGpiKSgfyMnBX9igMfQL9NRdB",
+                to,
                 amount
             ))
         }

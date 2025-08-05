@@ -13,7 +13,8 @@ val mockPosts = listOf(
         boosts = 47,
         bonkEarned = 125_000.0,
         username = "@boostbonk",
-        avatarUrl = "https://example.com/avatars/boostbonk.jpg"
+        avatarUrl = "https://example.com/avatars/boostbonk.jpg",
+        walletAddress = "",
     ),
     PostWithUser(
         id = 2,
@@ -25,7 +26,8 @@ val mockPosts = listOf(
         boosts = 12,
         bonkEarned = 10_500.0,
         username = "@solana_dev",
-        avatarUrl = "https://example.com/avatars/solana_dev.jpg"
+        avatarUrl = "https://example.com/avatars/solana_dev.jpg",
+        walletAddress = "",
     ),
     PostWithUser(
         id = 3,
@@ -37,7 +39,8 @@ val mockPosts = listOf(
         boosts = 31,
         bonkEarned = 76_320.0,
         username = "@bonklabs",
-        avatarUrl = "https://example.com/avatars/bonklabs.png"
+        avatarUrl = "https://example.com/avatars/bonklabs.png",
+        walletAddress = "",
     ),
     PostWithUser(
         id = 4,
@@ -49,7 +52,8 @@ val mockPosts = listOf(
         boosts = 64,
         bonkEarned = 203_900.0,
         username = "@nft_maniac",
-        avatarUrl = "https://example.com/avatars/nft_maniac.png"
+        avatarUrl = "https://example.com/avatars/nft_maniac.png",
+        walletAddress = "",
     ),
     PostWithUser(
         id = 5,
@@ -61,7 +65,8 @@ val mockPosts = listOf(
         boosts = 20,
         bonkEarned = 58_000.0,
         username = "@dev_dani",
-        avatarUrl = "https://example.com/avatars/dev_dani.jpg"
+        avatarUrl = "https://example.com/avatars/dev_dani.jpg",
+        walletAddress = "",
     ),
     PostWithUser(
         id = 6,
@@ -73,6 +78,7 @@ val mockPosts = listOf(
         boosts = 83,
         bonkEarned = 312_400.0,
         username = "@stakingqueen",
-        avatarUrl = "https://example.com/avatars/stakingqueen.jpg"
+        avatarUrl = "https://example.com/avatars/stakingqueen.jpg",
+        walletAddress = "",
     )
 )

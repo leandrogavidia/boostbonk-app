@@ -23,5 +23,7 @@ data class PostWithUser(
     val avatarUrl: String? = null,
     val email: String? = null,
     @SerialName("full_name")
-    val fullName: String? = null
+    val fullName: String? = null,
+    @SerialName("wallet_address")
+    val walletAddress: String? = null,
 )

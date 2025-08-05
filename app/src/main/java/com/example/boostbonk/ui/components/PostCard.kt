@@ -195,6 +195,7 @@ fun PostCard(
                     coroutineScope.launch {
                         val (success, json) = sendBonkFunctionRequest(
                             connectedWalletAddress ?: "",
+                            post.walletAddress ?: "",
                             amount
                         )
                         if (success && json?.has("tx") == true) {
