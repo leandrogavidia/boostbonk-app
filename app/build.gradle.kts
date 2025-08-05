@@ -17,6 +17,10 @@ android {
         versionName = "1.0"
         android.buildFeatures.buildConfig = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_KEY", "\"${project.properties["SUPABASE_KEY"]}\"")
+        buildConfigField("String", "SUPABASE_URL", "\"${project.properties["SUPABASE_URL"]}\"")
+        buildConfigField("String", "SUPABASE_AUTH_TOKEN", "\"${project.properties["SUPABASE_AUTH_TOKEN"]}\"")
     }
 
     buildTypes {

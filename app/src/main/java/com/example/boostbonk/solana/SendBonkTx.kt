@@ -1,5 +1,6 @@
 package com.example.boostbonk.solana
 
+import com.example.boostbonk.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -33,7 +34,7 @@ suspend fun sendBonkFunctionRequest(
     to: String,
     amount: Double
 ): Pair<Boolean, JSONObject?> {
-    val token = ""
+    val token = BuildConfig.SUPABASE_AUTH_TOKEN
     return try {
         val response = client.post("https://ekjjucdrpkqujyjhrjws.supabase.co/functions/v1/send-bonk") {
             contentType(ContentType.Application.Json)
