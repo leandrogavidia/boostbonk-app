@@ -28,7 +28,7 @@ fun BoostButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier,
+        modifier = modifier,
         colors = ButtonDefaults.buttonColors( containerColor = if (enabled) BonkOrange else BonkGray),
         shape = RoundedCornerShape(12.dp),
         enabled = enabled
@@ -40,7 +40,7 @@ fun BoostButton(
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            text = if (enabled) stringResource(R.string.boost) else stringResource(R.string.no_wallet),
+            text = if (enabled) stringResource(R.string.boost) else stringResource(R.string.connect_wallet),
             color = BonkWhite,
             style = MaterialTheme.typography.labelMedium,
         )

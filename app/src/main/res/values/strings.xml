@@ -53,4 +53,8 @@
     <string name="boost">Boost</string>
     <string name="connect_wallet">Connect Wallet</string>
     <string name="no_wallet">No Wallet</string>
+    <string name="set_wallet">Set Wallet</string>
+    <string name="update_wallet">Update Wallet</string>
+    <string name="wallet_address">Wallet address</string>
+    <string name="enter_wallet_address">Enter wallet address</string>
 </resources>

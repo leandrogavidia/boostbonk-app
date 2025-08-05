@@ -1,5 +1,6 @@
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -36,13 +37,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.ui.components.CreatePostModal
 import com.example.boostbonk.ui.components.skeletons.PostCardSkeleton
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.ui.theme.BonkYellow
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,6 +64,8 @@ fun FeedScreen(
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
     val posts = viewModel.posts.collectAsState()
     val isLoadingPosts = viewModel.isLoadingPosts.collectAsState().value
+    val userWalletAddress = viewModel.userWalletAddress.collectAsState().value
+    val username = viewModel.username.collectAsState().value ?: ""
 
     LaunchedEffect(Unit) {
         viewModel.loadAllPosts()
@@ -86,7 +89,22 @@ fun FeedScreen(
                     onClick = { setShowCreateSheet(true) },
                     containerColor = BonkOrange
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_post))
+                    if (userWalletAddress.isNullOrEmpty()) {
+                        Text(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp, horizontal = 16.dp)
+                                .clickable{
+                                    navController.navigate("profile/$username")
+                              }
+                            ,
+                            color = BonkWhite,
+                            style = MaterialTheme.typography.displaySmall,
+                            text = stringResource(R.string.set_wallet),
+
+                        )
+                    } else {
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_post))
+                    }
                 }
             }
         ) { innerPadding ->
@@ -135,7 +153,11 @@ fun FeedScreen(
                             navController = navController,
                             viewModel = viewModel,
                             sender = sender,
-                            onReload = { viewModel.loadAllPosts() }
+                            onReload = {
+                                viewModel.loadAllPosts()
+                                viewModel.loadWeeklyStats()
+                                viewModel.loadAllTimeStats()
+                            }
                         )
                     }
                 }
@@ -169,7 +191,6 @@ fun FeedScreen(
                             viewModel.submitPost(
                                 description = description,
                                 imageUri = imageUri,
-                                userId = viewModel.userId.value ?: "",
                                 context = context
                             ) { success ->
                                 setIsLoading(false)

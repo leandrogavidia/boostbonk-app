@@ -61,9 +61,8 @@ fun PostCard(
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
 
     val username = viewModel.username.collectAsState().value ?: ""
-    val walletAddress = viewModel.walletAddress.collectAsState().value
+    val connectedWalletAddress = viewModel.connectedWalletAddress.collectAsState().value
     val isOwnProfile = post.username == username
-    val userId = viewModel.userId.collectAsState().value ?: ""
 
     Column(
         modifier = modifier
@@ -137,41 +136,48 @@ fun PostCard(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
+
+
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp)
                 .background(BonkGray, shape = RoundedCornerShape(10.dp))
                 .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ColumnValue(
-                    name = stringResource(R.string.boosts),
-                    value = "%,d".format(post.boosts)
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                ColumnValue(
-                    name = stringResource(R.string.bonk_earned),
-                    value = formatBonkEarned(post.bonkEarned ?: 0.0)
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    ColumnValue(
+                        name = stringResource(R.string.boosts),
+                        value = "%,d".format(post.boosts)
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    ColumnValue(
+                        name = stringResource(R.string.bonk_earned),
+                        value = formatBonkEarned(post.bonkEarned ?: 0.0)
+                    )
+                }
             }
 
             if (!isOwnProfile) {
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
                 BoostButton(
-                    enabled = (walletAddress != null),
-                    modifier = Modifier.weight(1f),
+                    enabled = (connectedWalletAddress != null),
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = { setShowBoostModal(true) }
                 )
             }
@@ -188,7 +194,7 @@ fun PostCard(
                     setIsLoading(true)
                     coroutineScope.launch {
                         val (success, json) = sendBonkFunctionRequest(
-                            walletAddress ?: "",
+                            connectedWalletAddress ?: "",
                             amount
                         )
                         if (success && json?.has("tx") == true) {
@@ -208,7 +214,6 @@ fun PostCard(
                                     viewModel.submitBoost(
                                         bonks = amount,
                                         postId = post.id,
-                                        fromUserId = userId,
                                         toUserId = post.userId
                                     ) { result ->
                                         setIsLoading(false)

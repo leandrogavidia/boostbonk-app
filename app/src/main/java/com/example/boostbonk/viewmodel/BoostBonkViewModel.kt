@@ -86,8 +86,11 @@ class BoostBonkViewModel : ViewModel() {
     private val _isLoadingAllTimeBoostRanking = MutableStateFlow(true)
     val isLoadingAllTimeBoostRanking: StateFlow<Boolean> = _isLoadingAllTimeBoostRanking
 
-    val walletAddress = MutableStateFlow<String?>(null)
-    val walletAddressPublic: StateFlow<String?> = walletAddress
+    val connectedWalletAddress = MutableStateFlow<String?>(null)
+    val connectedWalletAddressPublic: StateFlow<String?> = connectedWalletAddress
+
+    val userWalletAddress = MutableStateFlow<String?>(null)
+    val userWalletAddressPublic: StateFlow<String?> = userWalletAddress
 
     private val _weeklyStats = MutableStateFlow<WeeklyStatsSummary?>(null)
     val weeklyStats: StateFlow<WeeklyStatsSummary?> = _weeklyStats
@@ -184,9 +187,9 @@ class BoostBonkViewModel : ViewModel() {
         context: Context,
         description: String,
         imageUri: Uri?,
-        userId: String,
         onComplete: (Boolean) -> Unit
     ) {
+        val userId = _userId.value
         viewModelScope.launch {
             try {
                 var imageUrl: String? = null
@@ -216,6 +219,7 @@ class BoostBonkViewModel : ViewModel() {
                 onComplete(true)
             } catch (e: Exception) {
                 e.printStackTrace()
+                Log.e("submitPost", "Failed to submit post", e)
                 onComplete(false)
             }
         }
@@ -224,10 +228,15 @@ class BoostBonkViewModel : ViewModel() {
     fun submitBoost(
         bonks: Double,
         postId: Long?,
-        fromUserId: String,
         toUserId: String,
         onComplete: (Boolean) -> Unit
     ) {
+        val fromUserId = _userId.value
+
+        if (fromUserId == null) {
+            return
+        }
+
         viewModelScope.launch {
             try {
                 supabase.from("boosts").insert(
@@ -444,6 +453,26 @@ class BoostBonkViewModel : ViewModel() {
                 Log.e("UserStats", "Failed to load user stats", e)
             } finally {
                 _isLoadingUserStats.value = false
+            }
+        }
+    }
+
+    fun setUserWalletAddress(username: String, newWalletAddress: String, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                supabase.from("users").update(
+                    mapOf("wallet_address" to newWalletAddress)
+                ) {
+                    filter {
+                        eq("username", username)
+                    }
+                }
+
+                userWalletAddress.value = newWalletAddress
+                onComplete(true)
+            } catch (e: Exception) {
+                Log.e("WalletUpdate", "Failed to update wallet address", e)
+                onComplete(false)
             }
         }
     }

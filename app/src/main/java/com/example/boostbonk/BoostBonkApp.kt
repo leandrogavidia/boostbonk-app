@@ -18,9 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +44,6 @@ import com.solana.mobilewalletadapter.clientlib.TransactionResult
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
-import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.launch
 
 @Composable
@@ -64,6 +60,8 @@ fun BoostBonkApp(
     val session = (sessionStatus.value as? SessionStatus.Authenticated)?.session
 
     LaunchedEffect(isLoggedIn) {
+        viewModel.loadSession()
+
         if (isLoggedIn) {
             navController.navigate(NavigationRoutes.Feed.route) {
                 popUpTo(NavigationRoutes.Login.route) { inclusive = true }
@@ -99,7 +97,7 @@ fun BoostBonkApp(
                 if (showBars) {
                     TopAppBarWithWallet(
                         isLoggedIn = true,
-                        walletAddress = viewModel.walletAddressPublic.collectAsState().value,
+                        walletAddress = viewModel.connectedWalletAddressPublic.collectAsState().value,
                         onConnectWallet = {
                             lifecycleScope.launch {
                                 val result = walletAdapter.connect(sender)
@@ -107,7 +105,7 @@ fun BoostBonkApp(
                                     is TransactionResult.Success -> {
                                         val pubKeyBytes = result.authResult.accounts.first().publicKey
                                         val pubKeyBase58 = Base58.encode(pubKeyBytes)
-                                        viewModel.walletAddress.value = pubKeyBase58
+                                        viewModel.connectedWalletAddress.value = pubKeyBase58
                                     }
                                     is TransactionResult.NoWalletFound -> {
                                         Log.e("Wallet", "No wallet found.")

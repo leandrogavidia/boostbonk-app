@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -27,21 +28,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
-import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.example.boostbonk.R
 import com.example.boostbonk.data.model.UserInfo
 import com.example.boostbonk.solana.sendBonkFunctionRequest
 import com.example.boostbonk.solana.walletAdapter
-import com.example.boostbonk.ui.theme.BonkGray
+import com.example.boostbonk.ui.components.WalletUpdateModal
 import com.example.boostbonk.ui.theme.BonkOrange
 import com.example.boostbonk.ui.theme.BonkWhite
 import com.example.boostbonk.utils.formatBonkEarned
+import com.example.boostbonk.viewmodel.BoostBonkViewModel
 import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
@@ -56,18 +56,21 @@ fun ProfileCard(
     avatarUrl: String,
     isOwnProfile: Boolean,
     viewModel: BoostBonkViewModel,
-    fromUserId: String,
     toUserId: String,
     totalBoosts: Int,
     totalBonkEarned: Double,
     sender: ActivityResultSender,
     userInfo: UserInfo? = null,
+    userWalletAddress: String?
     ) {
     val coroutineScope = rememberCoroutineScope()
 
     val (showBoostModal, setShowBoostModal) = remember { mutableStateOf(false) }
     val (isLoading, setIsLoading) = remember { mutableStateOf(false) }
-    val walletAddress = viewModel.walletAddress.collectAsState().value
+    val (showWalletModal, setShowWalletModal) = remember { mutableStateOf(false) }
+    val (isUpdatingWallet, setIsUpdatingWallet) = remember { mutableStateOf(false) }
+
+    val connectedWalletAddress = viewModel.connectedWalletAddress.collectAsState().value
     val currentUsername = userInfo?.username ?: viewModel.username.value ?: ""
 
     Card(
@@ -115,13 +118,34 @@ fun ProfileCard(
 
             if(!isOwnProfile) {
                 CustomButton(
-                    enabled = (walletAddress != null),
+                    enabled = (connectedWalletAddress != null),
                     onClick = { setShowBoostModal(true) },
                     icon = Icons.Filled.RocketLaunch,
                     backgroundColor = BonkOrange,
-                    text = if (walletAddress != null) stringResource(R.string.boost) else stringResource(R.string.no_wallet),
+                    text = if (connectedWalletAddress != null) stringResource(R.string.boost) else stringResource(R.string.connect_wallet),
                     contentColor = BonkWhite,
                     modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (!userWalletAddress.isNullOrBlank()) {
+                    Text(
+                        text = "Wallet: ${userWalletAddress.take(4) + "..." + userWalletAddress.takeLast(4)}",
+                        color = BonkOrange,
+                        fontSize = 14.sp,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                CustomButton(
+                    onClick = { setShowWalletModal(true) },
+                    text = if (userWalletAddress.isNullOrBlank()) stringResource(R.string.set_wallet) else stringResource(R.string.update_wallet),
+                    backgroundColor = BonkOrange,
+                    contentColor = BonkWhite,
+                    modifier = Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.Wallet
                 )
             }
 
@@ -137,6 +161,25 @@ fun ProfileCard(
         }
     }
 
+    if (showWalletModal) {
+        WalletUpdateModal(
+            onDismiss = { setShowWalletModal(false) },
+            currentAddress = userWalletAddress,
+            isLoading = isUpdatingWallet,
+            coroutineScope = coroutineScope,
+            onSubmit = { newAddress ->
+                setIsUpdatingWallet(true)
+                viewModel.setUserWalletAddress(currentUsername, newAddress) { success ->
+                    setIsUpdatingWallet(false)
+                    if (success) {
+                        setShowWalletModal(false)
+                        viewModel.loadUserProfileByUsername(currentUsername)
+                    }
+                }
+            }
+        )
+    }
+
     if (showBoostModal) {
         BoostBonkModal(
             onDismiss = { setShowBoostModal(false) },
@@ -146,7 +189,7 @@ fun ProfileCard(
                 setIsLoading(true)
                 coroutineScope.launch {
                     val (success, json) = sendBonkFunctionRequest(
-                        walletAddress ?: "",
+                        connectedWalletAddress ?: "",
                         amount
                     )
                     if (success && json?.has("tx") == true) {
@@ -166,7 +209,6 @@ fun ProfileCard(
                                 viewModel.submitBoost(
                                     bonks = amount,
                                     postId = null,
-                                    fromUserId = fromUserId,
                                     toUserId = toUserId
                                 ) { success ->
                                     setIsLoading(false)

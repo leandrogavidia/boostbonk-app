@@ -1,3 +1,5 @@
+package com.example.boostbonk.ui.components
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,14 +33,15 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BoostBonkModal(
+fun WalletUpdateModal(
     onDismiss: () -> Unit,
-    onSubmit: (Double) -> Unit,
+    currentAddress: String?,
+    onSubmit: (String) -> Unit,
     coroutineScope: CoroutineScope,
     isLoading: Boolean
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val (bonkAmount, setBonkAmount) = remember { mutableStateOf("") }
+    val (walletAddressInput, setWalletAddressInput) = remember { mutableStateOf(currentAddress ?: "") }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -50,26 +53,35 @@ fun BoostBonkModal(
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            Text(stringResource(R.string.boost), style = MaterialTheme.typography.displaySmall)
+            Text(
+                text = if (currentAddress.isNullOrBlank()) stringResource(R.string.set_wallet) else stringResource(
+                    R.string.update_wallet
+                ),
+                style = MaterialTheme.typography.displaySmall
+            )
             Spacer(modifier = Modifier.height(12.dp))
+
             OutlinedTextField(
-                value = bonkAmount,
-                onValueChange = setBonkAmount,
-                label = { Text(text = stringResource(R.string.amount)) },
-                placeholder = { Text(text = stringResource(R.string.enter_bonk_amount)) },
+                value = walletAddressInput,
+                onValueChange = setWalletAddressInput,
+                label = { Text(stringResource(R.string.wallet_address)) },
+                placeholder = { Text(stringResource(R.string.enter_wallet_address)) },
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
+                    keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
+
             Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        onSubmit(bonkAmount.toDouble())
+                        onSubmit(walletAddressInput)
                     }
                 },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BonkOrange,
                     contentColor = BonkWhite
@@ -77,8 +89,7 @@ fun BoostBonkModal(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .height(48.dp)
-                    .fillMaxWidth(),
-                enabled = !isLoading
+                    .fillMaxWidth()
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(

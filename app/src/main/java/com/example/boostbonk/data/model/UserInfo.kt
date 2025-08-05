@@ -11,5 +11,7 @@ data class UserInfo(
     val fullName: String? = null,
     val email: String? = null,
     @SerialName("avatar_url")
-    val avatarUrl: String? = null
+    val avatarUrl: String? = null,
+    @SerialName("wallet_address")
+    val walletAddress: String? = null
 )
